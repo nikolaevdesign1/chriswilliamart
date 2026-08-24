@@ -1,4 +1,5 @@
 import "./styles/main.css";
-import { initHeroIntro } from "./js/animations.js";
+import { initWallIntro, initHorizontalWheelScroll } from "./js/animations.js";
 
-initHeroIntro();
+initWallIntro();
+initHorizontalWheelScroll();
