@@ -14,10 +14,13 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 html,
 body {
   height: 100%;
-  overflow: hidden;
   overscroll-behavior: none;
 }
 
@@ -168,6 +171,7 @@ button {
 }
 
 .tile {
+  display: block;
   position: absolute;
   left: calc(var(--u) * var(--x));
   top: calc(var(--u) * var(--y));
@@ -245,6 +249,15 @@ button {
   border-bottom: 1px solid rgba(40, 40, 40, 0.12);
 }
 
+.list-panel__row a {
+  display: contents;
+  color: inherit;
+}
+
+.list-panel__row a:hover span {
+  opacity: 0.6;
+}
+
 .wall-caption {
   position: absolute;
   left: calc(var(--u) * var(--x));
@@ -268,4 +281,108 @@ button {
   font-size: calc(var(--u) * 14);
   letter-spacing: -0.03em;
   line-height: 1.5;
+}
+
+/* ---------- Static single-screen pages (about / contacts) ---------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+}
+
+/* ---------- Scrolling page canvas (artwork detail) ---------- */
+
+.page {
+  position: relative;
+  height: calc(var(--u) * var(--page-h, 1080));
+}
+
+/* ---------- Shared absolute-positioning + typography utilities ---------- */
+
+.abs {
+  position: absolute;
+  left: calc(var(--u) * var(--x));
+  top: calc(var(--u) * var(--y));
+}
+
+.abs--right {
+  left: auto;
+  right: calc(var(--u) * var(--x));
+  text-align: right;
+}
+
+.abs--w {
+  width: calc(var(--u) * var(--w));
+}
+
+.text-heading {
+  font-size: calc(var(--u) * 30);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.text-copy {
+  font-size: calc(var(--u) * 12);
+  letter-spacing: -0.03em;
+  line-height: 1.5;
+}
+
+.text-label {
+  font-size: calc(var(--u) * 12);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.text-tag {
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* ---------- Welcome / intro splash ---------- */
+
+.welcome-copy {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-size: calc(var(--u) * 14);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.4;
+  z-index: 2;
+}
+
+.scatter {
+  position: absolute;
+  left: calc(var(--u) * var(--x));
+  top: calc(var(--u) * var(--y));
+  width: calc(var(--u) * var(--w));
+  height: calc(var(--u) * var(--h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scatter__inner {
+  width: calc(var(--u) * var(--iw));
+  height: calc(var(--u) * var(--ih));
+  transform: rotate(var(--r));
+  overflow: hidden;
+  box-shadow: 0 calc(var(--u) * 12) calc(var(--u) * 24) rgba(40, 40, 40, 0.15);
+}
+
+.scatter__inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.welcome-enter {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
 }

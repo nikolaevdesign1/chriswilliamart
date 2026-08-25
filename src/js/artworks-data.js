@@ -1,5 +1,5 @@
 export const artworks = [
-  { title: "Last day of pompeii", artist: "Jack Wolfstein" },
+  { title: "Last day of pompeii", artist: "Jack Wolfstein", href: "/work.html" },
   { title: "The Great Wave off Kanagawa", artist: "Hokusai" },
   { title: "Starry Night", artist: "Vincent van Gogh" },
   { title: "Mona Lisa", artist: "Leonardo da Vinci" },
