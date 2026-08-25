@@ -1,7 +1,10 @@
 import "./styles/main.css";
-import { renderArtworkList } from "./js/list-view.js";
-import { initWallIntro, initHorizontalWheelScroll } from "./js/animations.js";
+import { initListPage } from "./js/list-page.js";
+import { initRipple } from "./js/ripple.js";
+import { initWallIntro } from "./js/animations.js";
+import { initCursor } from "./js/cursor.js";
 
-renderArtworkList();
+initRipple();
+initListPage();
 initWallIntro();
-initHorizontalWheelScroll();
+initCursor();

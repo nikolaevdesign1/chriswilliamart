@@ -8,8 +8,12 @@ let camera = { x: 0, y: 0 };
 let target = { x: 0, y: 0 };
 let velocity = { x: 0, y: 0 };
 let dragging = false;
+let didDrag = false;
+let suppressClick = false;
+let startPos = { x: 0, y: 0 };
 let last = { x: 0, y: 0 };
 let rafId = null;
+const DRAG_THRESHOLD = 6;
 let onTileHover = null;
 let onTileLeave = null;
 let onTileClick = null;
@@ -47,13 +51,20 @@ function build() {
       img.src = work.image;
       img.alt = work.title;
       img.loading = "lazy";
+      img.draggable = false;
       tile.appendChild(img);
 
+      tile.draggable = false;
+      tile.addEventListener("dragstart", (event) => event.preventDefault());
       tile.addEventListener("mouseenter", () => onTileHover?.(tile, hall, work));
       tile.addEventListener("mousemove", (event) => onTileHover?.(tile, hall, work, event));
       tile.addEventListener("mouseleave", () => onTileLeave?.(tile));
       tile.addEventListener("click", (event) => {
         event.preventDefault();
+        if (suppressClick) {
+          suppressClick = false;
+          return;
+        }
         onTileClick?.(tile, hall, work);
       });
 
@@ -93,10 +104,10 @@ function wrapCentered(value, size) {
 
 function onPointerDown(event) {
   dragging = true;
+  didDrag = false;
   last = { x: event.clientX, y: event.clientY };
+  startPos = { x: event.clientX, y: event.clientY };
   velocity = { x: 0, y: 0 };
-  root.setPointerCapture(event.pointerId);
-  root.classList.add("is-dragging");
 }
 
 function onPointerMove(event) {
@@ -107,15 +118,30 @@ function onPointerMove(event) {
   target.x -= dx;
   target.y -= dy;
   velocity = { x: dx, y: dy };
+
+  if (!didDrag) {
+    const totalDx = event.clientX - startPos.x;
+    const totalDy = event.clientY - startPos.y;
+    if (Math.hypot(totalDx, totalDy) > DRAG_THRESHOLD) {
+      didDrag = true;
+      try {
+        root.setPointerCapture(event.pointerId);
+      } catch {}
+      root.classList.add("is-dragging");
+    }
+  }
 }
 
 function onPointerUp(event) {
   dragging = false;
   root.classList.remove("is-dragging");
-  try {
-    root.releasePointerCapture(event.pointerId);
-  } catch {}
-  flingDecay();
+  if (didDrag) {
+    suppressClick = true;
+    try {
+      root.releasePointerCapture(event.pointerId);
+    } catch {}
+    flingDecay();
+  }
 }
 
 function flingDecay() {

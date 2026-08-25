@@ -47,8 +47,8 @@ function loadTexture(src) {
 function setCameraSize(w, h) {
   camera.left = 0;
   camera.right = w;
-  camera.top = 0;
-  camera.bottom = h;
+  camera.top = h;
+  camera.bottom = 0;
   camera.updateProjectionMatrix();
 }
 
@@ -62,7 +62,7 @@ export function initRipple() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   scene = new THREE.Scene();
-  camera = new THREE.OrthographicCamera(0, window.innerWidth, 0, window.innerHeight, 0.1, 1000);
+  camera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, 0.1, 1000);
   camera.position.z = 10;
 
   const geometry = new THREE.PlaneGeometry(1, 1);
@@ -76,8 +76,6 @@ export function initRipple() {
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
     },
     transparent: true,
-    // top=0/bottom=height (below) mirrors the Y axis to match DOM coordinates,
-    // which flips triangle winding — render both sides so the plane isn't culled.
     side: THREE.DoubleSide,
     depthTest: false,
     depthWrite: false,
@@ -100,11 +98,24 @@ export function initRipple() {
 }
 
 function placeMesh(rect) {
-  mesh.position.set(rect.left + rect.width / 2, rect.top + rect.height / 2, 0);
+  // The camera uses the standard top>bottom convention (world Y grows upward),
+  // so DOM Y (grows downward) has to be flipped when placing the mesh.
+  const centerY = window.innerHeight - (rect.top + rect.height / 2);
+  mesh.position.set(rect.left + rect.width / 2, centerY, 0);
   mesh.scale.set(rect.width, rect.height, 1);
 }
 
+function restoreImage(tile) {
+  const img = tile?.querySelector("img");
+  if (img) img.style.opacity = "1";
+}
+
 export function showRipple(tile, imageSrc) {
+  if (activeTile && activeTile !== tile) {
+    gsap.killTweensOf(mesh.material.uniforms.uHover);
+    restoreImage(activeTile);
+  }
+
   const img = tile.querySelector("img");
   if (img) img.style.opacity = "0";
 
@@ -134,8 +145,7 @@ export function hideRipple(tile) {
     ease: "power2.out",
     onComplete: () => {
       if (activeTile === tile) {
-        const img = tile.querySelector("img");
-        if (img) img.style.opacity = "1";
+        restoreImage(tile);
         mesh.visible = false;
         activeTile = null;
       }

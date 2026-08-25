@@ -143,33 +143,6 @@ button {
   text-underline-offset: 0.15em;
 }
 
-/* ---------- Horizontally scrolling wall (shared by wall & list views) ---------- */
-
-.wall {
-  position: fixed;
-  inset: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-}
-
-.wall::-webkit-scrollbar {
-  display: none;
-}
-
-.wall__track {
-  position: relative;
-  height: 100vh;
-}
-
-.wall__track--home {
-  width: calc(var(--u) * 3458);
-}
-
-.wall__track--list {
-  width: calc(var(--u) * 2320);
-}
-
 .tile {
   display: block;
   position: absolute;
@@ -190,29 +163,6 @@ button {
 
 .tile--placeholder {
   background: var(--color-placeholder);
-}
-
-.artist-spotlight {
-  position: absolute;
-  left: calc(var(--u) * var(--x));
-  top: calc(var(--u) * var(--y));
-  width: calc(var(--u) * var(--w));
-}
-
-.artist-spotlight__name {
-  display: flex;
-  flex-direction: column;
-  font-size: calc(var(--u) * 100);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-}
-
-.artist-spotlight__bio {
-  margin-top: calc(var(--u) * 30);
-  font-size: calc(var(--u) * 24);
-  letter-spacing: -0.03em;
-  line-height: 1.4;
 }
 
 /* ---------- List view ---------- */
@@ -249,38 +199,122 @@ button {
   border-bottom: 1px solid rgba(40, 40, 40, 0.12);
 }
 
-.list-panel__row a {
-  display: contents;
-  color: inherit;
+.list-panel__artist {
+  text-align: left;
+  transition: opacity 0.2s ease;
 }
 
-.list-panel__row a:hover span {
+.list-panel__artist:hover {
   opacity: 0.6;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
-.wall-caption {
-  position: absolute;
-  left: calc(var(--u) * var(--x));
-  top: calc(var(--u) * var(--y));
-  width: calc(var(--u) * var(--w));
-  font-size: calc(var(--u) * 40);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+/* Floating thumbnail preview that follows a hovered row */
+
+.list-preview {
+  position: fixed;
+  left: calc(var(--u) * 700);
+  top: var(--preview-y, 50%);
+  width: calc(var(--u) * 340);
+  height: calc(var(--u) * 240);
+  transform: translateY(-50%) scale(0.96);
+  opacity: 0;
+  z-index: 6;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  background: var(--color-placeholder);
 }
 
-.wall-caption span {
+.list-preview.is-visible {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.list-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-.wall-bio {
+/* Author panel: bio + horizontally scrolling works with the ripple effect */
+
+.artist-panel {
+  position: fixed;
+  right: calc(var(--u) * 24);
+  top: calc(var(--u) * 102);
+  width: calc(var(--u) * 1160);
+  z-index: 7;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.artist-panel.is-open {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.artist-panel__close {
   position: absolute;
-  left: calc(var(--u) * var(--x));
-  top: calc(var(--u) * var(--y));
-  width: calc(var(--u) * var(--w));
+  top: 0;
+  right: 0;
+  font-size: 24px;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.artist-panel__close:hover {
+  opacity: 1;
+}
+
+.artist-panel__name {
+  font-size: calc(var(--u) * 40);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.artist-panel__bio {
+  margin-top: calc(var(--u) * 12);
+  max-width: calc(var(--u) * 620);
   font-size: calc(var(--u) * 14);
   letter-spacing: -0.03em;
   line-height: 1.5;
+  opacity: 0.7;
+}
+
+.artist-panel__strip {
+  margin-top: calc(var(--u) * 28);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.artist-panel__strip::-webkit-scrollbar {
+  display: none;
+}
+
+.artist-panel__track {
+  display: flex;
+  gap: calc(var(--u) * 20);
+}
+
+.artist-tile {
+  display: block;
+  flex: none;
+  width: calc(var(--u) * 320);
+  height: calc(var(--u) * 420);
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+
+.artist-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.15s ease;
 }
 
 /* ---------- Static single-screen pages (about / contacts) ---------- */
@@ -395,7 +429,11 @@ button {
   overflow: hidden;
   cursor: grab;
   touch-action: none;
+  user-select: none;
   background: var(--color-bg);
+  background-image: linear-gradient(to right, rgba(40, 40, 40, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(40, 40, 40, 0.05) 1px, transparent 1px);
+  background-size: 100px 100px;
 }
 
 .field.is-dragging {
@@ -417,6 +455,8 @@ button {
   height: calc(var(--h) * 1px);
   background: var(--color-placeholder);
   overflow: hidden;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .field-tile img {
@@ -425,26 +465,30 @@ button {
   object-fit: cover;
   display: block;
   transition: opacity 0.15s ease;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .field-label {
   position: absolute;
   top: 0;
   left: 0;
-  width: 420px;
+  width: 440px;
   color: var(--color-fg);
   pointer-events: none;
 }
 
 .field-label__name {
-  font-size: 22px;
+  font-size: 56px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin-bottom: 8px;
+  line-height: 1.05;
+  margin-bottom: 14px;
 }
 
 .field-label__bio {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   opacity: 0.6;
 }
@@ -456,4 +500,33 @@ button {
   inset: 0;
   z-index: 8;
   pointer-events: none;
+}
+
+/* ---------- Custom cursor dot ---------- */
+
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity 0.2s ease;
+}
+
+.cursor-dot--hidden {
+  opacity: 0;
+}
+
+.cursor-dot__inner {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-fg);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cursor-dot--grow .cursor-dot__inner {
+  transform: scale(2.6);
 }

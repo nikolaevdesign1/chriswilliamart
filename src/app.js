@@ -4,10 +4,12 @@ import { initField, pauseField, resumeField } from "./js/field.js";
 import { initRipple, showRipple, moveRipple, hideRipple, revealTransition } from "./js/ripple.js";
 import { renderWork } from "./js/work-view.js";
 import { designRect, WORK_HERO_BOX } from "./js/design-canvas.js";
+import { initCursor } from "./js/cursor.js";
 
 const fieldRoot = document.getElementById("view-field");
 const workRoot = document.getElementById("view-work");
 
+initCursor();
 initRipple();
 initField(fieldRoot, {
   onHover: (tile, hall, work, event) => {
