@@ -2,6 +2,7 @@ import gsap from "gsap";
 import { halls } from "../data/halls.js";
 
 const SCATTER_COUNT = 18;
+const MIN_DURATION = 2000;
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
@@ -47,26 +48,32 @@ export function initPreloader() {
 
   let loaded = 0;
   const total = images.length;
+  const startTime = performance.now();
 
   function updateProgress() {
     const pct = total ? Math.round((loaded / total) * 100) : 100;
     fill.style.width = `${pct}%`;
     percent.textContent = `${pct}%`;
-    if (loaded >= total) finish();
+    if (loaded >= total) requestFinish();
+  }
+
+  function requestFinish() {
+    const elapsed = performance.now() - startTime;
+    const remaining = Math.max(0, MIN_DURATION - elapsed);
+    setTimeout(finish, remaining);
   }
 
   function finish() {
     gsap.to(root, {
       opacity: 0,
       duration: 0.6,
-      delay: 0.2,
       ease: "power2.out",
       onComplete: () => root.remove(),
     });
   }
 
   if (total === 0) {
-    finish();
+    requestFinish();
     return;
   }
 

@@ -512,18 +512,17 @@ button {
   display: block;
   opacity: 0;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: -0.02em;
-  color: var(--color-bg);
-  transform: scale(0.4);
-  transition: opacity 0.2s ease;
+  color: var(--color-fg);
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .cursor-dot--label .cursor-dot__inner {
   width: auto;
   height: auto;
-  padding: 10px 16px;
-  border-radius: 999px;
+  background: none;
 }
 
 .cursor-dot--label .cursor-dot__label {
@@ -541,13 +540,15 @@ button {
 
 /* Positioned with a plain formula (not flex-centered as a block) so its
    on-screen rect stays predictable — the reveal-transition target in
-   design-canvas.js's workHeroRect() mirrors these numbers exactly. */
+   design-canvas.js's workHeroRect() mirrors these numbers exactly.
+   The third min() term caps height at 60vh (via the 610/896 ratio) so a
+   short/wide viewport can never stretch the hero into the info row. */
 .work-hero {
   position: absolute;
   left: 50%;
   top: 12vh;
   transform: translateX(-50%);
-  width: min(46vw, 520px);
+  width: min(46vw, 520px, calc(60vh * 0.681));
   aspect-ratio: 610 / 896;
   background: var(--color-placeholder);
   overflow: hidden;
@@ -573,7 +574,7 @@ button {
 
 .work-info__row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
 }

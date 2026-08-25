@@ -1,5 +1,7 @@
 export const CELL_W = 2000;
-export const CELL_H = 1300;
+// Tall row-1 slots bottom out at 280 + (560+40) + 560 = 1440 — this needs
+// to clear that with room to spare before the next cell's label starts.
+export const CELL_H = 1560;
 export const GRID_COLS = 3;
 export const GRID_ROWS = 3;
 export const WORLD_W = CELL_W * GRID_COLS;

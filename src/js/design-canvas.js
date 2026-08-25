@@ -4,7 +4,7 @@
 export function workHeroRect() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const width = Math.min(vw * 0.46, 520);
+  const width = Math.min(vw * 0.46, 520, vh * 0.6 * 0.681);
   const height = width * (896 / 610);
   return {
     left: (vw - width) / 2,
