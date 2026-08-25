@@ -105,19 +105,10 @@ function placeMesh(rect) {
   mesh.scale.set(rect.width, rect.height, 1);
 }
 
-function restoreImage(tile) {
-  const img = tile?.querySelector("img");
-  if (img) img.style.opacity = "1";
-}
-
 export function showRipple(tile, imageSrc) {
   if (activeTile && activeTile !== tile) {
     gsap.killTweensOf(mesh.material.uniforms.uHover);
-    restoreImage(activeTile);
   }
-
-  const img = tile.querySelector("img");
-  if (img) img.style.opacity = "0";
 
   const rect = tile.getBoundingClientRect();
   mesh.material.uniforms.uTexture.value = loadTexture(imageSrc);
@@ -145,7 +136,6 @@ export function hideRipple(tile) {
     ease: "power2.out",
     onComplete: () => {
       if (activeTile === tile) {
-        restoreImage(tile);
         mesh.visible = false;
         activeTile = null;
       }
@@ -154,6 +144,8 @@ export function hideRipple(tile) {
 }
 
 export function revealTransition(tile, imageSrc, target, onDone) {
+  gsap.killTweensOf(mesh.material.uniforms.uHover);
+
   const rect = tile.getBoundingClientRect();
   mesh.material.uniforms.uTexture.value = loadTexture(imageSrc);
   placeMesh(rect);
