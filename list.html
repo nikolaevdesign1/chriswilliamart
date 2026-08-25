@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chris Williams Art Gallery — List</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav">
+        <a class="site-nav__link is-active" href="/">gallery area</a>
+        <a class="site-nav__link" href="#about">about</a>
+        <a class="site-nav__link" href="#contacts">contacts</a>
+      </nav>
+      <p class="site-logo">
+        <span>Chris Williams</span>
+        <span>Art gallery</span>
+      </p>
+    </header>
+
+    <div class="list-panel">
+      <div class="list-panel__head">
+        <span>number</span>
+        <span>project</span>
+        <span>project</span>
+      </div>
+      <ul class="list-panel__rows"></ul>
+    </div>
+
+    <main class="wall" id="list-wall">
+      <div class="wall__track wall__track--list">
+        <h2 class="wall-caption" style="--x:812;--y:222;--w:300">
+          <span>Jack</span>
+          <span>Wolfstein</span>
+        </h2>
+        <figure class="tile" style="--x:812;--y:408;--w:453;--h:556">
+          <img src="/src/assets/img/gallery/artwork-08.jpg" alt="Birds among branches" loading="lazy" />
+        </figure>
+
+        <p class="wall-bio" style="--x:1285;--y:222;--w:520">
+          Artist Jack Wolfstein is renowned for his innovative style and unique approach to art. With a career
+          spanning over a decade, he has captivated audiences with his thought-provoking and emotionally charged
+          works. Drawing inspiration from the surrounding nature and personal experiences, Wolfstein blends
+          traditional techniques with modern elements, creating pieces that tell compelling stories. Each artwork
+          reflects a piece of his soul, inviting viewers to delve into the depths of his creativity.
+        </p>
+        <figure class="tile" style="--x:1285;--y:408;--w:453;--h:556">
+          <img src="/src/assets/img/gallery/artwork-09.jpg" alt="Last day of Pompeii" loading="lazy" />
+        </figure>
+
+        <figure class="tile" style="--x:1758;--y:408;--w:453;--h:556">
+          <img src="/src/assets/img/gallery/artwork-10.jpg" alt="Castle landscape" loading="lazy" />
+        </figure>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>
+      <div class="view-toggle">
+        <a class="view-toggle__btn" href="/">Wall</a>
+        <a class="view-toggle__btn is-active" href="/list.html">List</a>
+      </div>
+      <p class="site-footer__rights">all rights reserved 2026</p>
+    </footer>
+
+    <script type="module" src="/src/list.js"></script>
+  </body>
+</html>

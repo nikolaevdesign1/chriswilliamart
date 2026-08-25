@@ -1,6 +1,7 @@
 :root {
   --color-bg: #f4f5f5;
   --color-fg: #282828;
+  --color-muted: #aaaaaa;
   --color-placeholder: #d9d9d9;
   --font-base: "Google Sans Flex", "Helvetica Neue", Arial, sans-serif;
   /* 1px of the 1920x1080 design canvas, expressed in viewport height units */
@@ -139,9 +140,9 @@ button {
   text-underline-offset: 0.15em;
 }
 
-/* ---------- Gallery wall ---------- */
+/* ---------- Horizontally scrolling wall (shared by wall & list views) ---------- */
 
-.gallery-wall {
+.wall {
   position: fixed;
   inset: 0;
   overflow-x: auto;
@@ -149,14 +150,21 @@ button {
   scrollbar-width: none;
 }
 
-.gallery-wall::-webkit-scrollbar {
+.wall::-webkit-scrollbar {
   display: none;
 }
 
-.gallery-wall__track {
+.wall__track {
   position: relative;
   height: 100vh;
+}
+
+.wall__track--home {
   width: calc(var(--u) * 3458);
+}
+
+.wall__track--list {
+  width: calc(var(--u) * 2320);
 }
 
 .tile {
@@ -201,4 +209,63 @@ button {
   font-size: calc(var(--u) * 24);
   letter-spacing: -0.03em;
   line-height: 1.4;
+}
+
+/* ---------- List view ---------- */
+
+.list-panel {
+  position: fixed;
+  left: calc(var(--u) * 24);
+  top: calc(var(--u) * 102);
+  width: calc(var(--u) * 610);
+  z-index: 5;
+}
+
+.list-panel__head {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 157) calc(var(--u) * 315) 1fr;
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.03em;
+  color: var(--color-muted);
+  margin-bottom: calc(var(--u) * 20);
+}
+
+.list-panel__rows {
+  list-style: none;
+}
+
+.list-panel__row {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 157) calc(var(--u) * 315) 1fr;
+  align-items: baseline;
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.03em;
+  padding-bottom: calc(var(--u) * 8);
+  margin-bottom: calc(var(--u) * 8);
+  border-bottom: 1px solid rgba(40, 40, 40, 0.12);
+}
+
+.wall-caption {
+  position: absolute;
+  left: calc(var(--u) * var(--x));
+  top: calc(var(--u) * var(--y));
+  width: calc(var(--u) * var(--w));
+  font-size: calc(var(--u) * 40);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.wall-caption span {
+  display: block;
+}
+
+.wall-bio {
+  position: absolute;
+  left: calc(var(--u) * var(--x));
+  top: calc(var(--u) * var(--y));
+  width: calc(var(--u) * var(--w));
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.03em;
+  line-height: 1.5;
 }

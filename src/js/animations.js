@@ -1,15 +1,15 @@
 import { gsap } from "gsap";
 
 export function initWallIntro() {
-  gsap.from(".site-header > *, .site-footer > *", {
+  gsap.from(".site-header > *, .site-footer > *, .list-panel__head, .list-panel__row", {
     opacity: 0,
     y: -12,
     duration: 0.6,
-    stagger: 0.05,
+    stagger: 0.03,
     ease: "power2.out",
   });
 
-  gsap.from(".tile, .artist-spotlight", {
+  gsap.from(".tile, .artist-spotlight, .wall-caption, .wall-bio", {
     opacity: 0,
     y: 24,
     duration: 0.7,
@@ -20,7 +20,7 @@ export function initWallIntro() {
 }
 
 export function initHorizontalWheelScroll() {
-  const wall = document.querySelector(".gallery-wall");
+  const wall = document.querySelector(".wall");
   if (!wall) return;
 
   wall.addEventListener(

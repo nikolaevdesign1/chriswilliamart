@@ -14,7 +14,7 @@
   <body>
     <header class="site-header">
       <nav class="site-nav">
-        <a class="site-nav__link is-active" href="#gallery">gallery area</a>
+        <a class="site-nav__link is-active" href="/">gallery area</a>
         <a class="site-nav__link" href="#about">about</a>
         <a class="site-nav__link" href="#contacts">contacts</a>
       </nav>
@@ -24,8 +24,8 @@
       </p>
     </header>
 
-    <main class="gallery-wall" id="gallery">
-      <div class="gallery-wall__track">
+    <main class="wall" id="gallery">
+      <div class="wall__track wall__track--home">
         <figure class="tile" style="--x:24;--y:118;--w:295;--h:448">
           <img src="/src/assets/img/gallery/artwork-01.jpg" alt="Last day of Pompeii" loading="lazy" />
         </figure>
@@ -71,8 +71,8 @@
     <footer class="site-footer">
       <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>
       <div class="view-toggle">
-        <button class="view-toggle__btn is-active" type="button">Wall</button>
-        <button class="view-toggle__btn" type="button">List</button>
+        <a class="view-toggle__btn is-active" href="/">Wall</a>
+        <a class="view-toggle__btn" href="/list.html">List</a>
       </div>
       <p class="site-footer__rights">all rights reserved 2026</p>
     </footer>
