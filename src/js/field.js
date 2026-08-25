@@ -17,6 +17,7 @@ const DRAG_THRESHOLD = 6;
 let onTileHover = null;
 let onTileLeave = null;
 let onTileClick = null;
+let hoveredTile = null;
 
 function wrap(value, size) {
   return ((value % size) + size) % size;
@@ -56,9 +57,15 @@ function build() {
 
       tile.draggable = false;
       tile.addEventListener("dragstart", (event) => event.preventDefault());
-      tile.addEventListener("mouseenter", () => onTileHover?.(tile, hall, work));
+      tile.addEventListener("mouseenter", () => {
+        hoveredTile = tile;
+        onTileHover?.(tile, hall, work);
+      });
       tile.addEventListener("mousemove", (event) => onTileHover?.(tile, hall, work, event));
-      tile.addEventListener("mouseleave", () => onTileLeave?.(tile));
+      tile.addEventListener("mouseleave", () => {
+        if (hoveredTile === tile) hoveredTile = null;
+        onTileLeave?.(tile);
+      });
       tile.addEventListener("click", (event) => {
         event.preventDefault();
         if (suppressClick) {
@@ -103,6 +110,10 @@ function wrapCentered(value, size) {
 }
 
 function onPointerDown(event) {
+  // Stops the browser from starting a native image/link drag — without
+  // this, holding down on a tile can pick it up as a drag-ghost instead of
+  // panning the field.
+  if (event.pointerType !== "touch") event.preventDefault();
   dragging = true;
   didDrag = false;
   last = { x: event.clientX, y: event.clientY };
@@ -128,6 +139,12 @@ function onPointerMove(event) {
         root.setPointerCapture(event.pointerId);
       } catch {}
       root.classList.add("is-dragging");
+      // Pointer capture redirects the tile's own mouse events to `root`,
+      // so it would never otherwise get a mouseleave once a real drag starts.
+      if (hoveredTile) {
+        onTileLeave?.(hoveredTile);
+        hoveredTile = null;
+      }
     }
   }
 }

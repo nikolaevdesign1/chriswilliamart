@@ -307,6 +307,8 @@ button {
   height: calc(var(--u) * 420);
   background: var(--color-placeholder);
   overflow: hidden;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .artist-tile img {
@@ -315,6 +317,9 @@ button {
   object-fit: cover;
   display: block;
   transition: opacity 0.15s ease;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* ---------- Static single-screen pages (about / contacts) ---------- */

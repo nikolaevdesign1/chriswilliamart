@@ -64,6 +64,8 @@ function renderArtistPanel(hall) {
     img.draggable = false;
     tile.appendChild(img);
 
+    tile.draggable = false;
+    tile.addEventListener("dragstart", (event) => event.preventDefault());
     tile.addEventListener("mouseenter", () => showRipple(tile, work.image));
     tile.addEventListener("mousemove", (event) => moveRipple(tile, event));
     tile.addEventListener("mouseleave", () => hideRipple(tile));
