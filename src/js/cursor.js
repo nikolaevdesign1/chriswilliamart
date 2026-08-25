@@ -7,8 +7,9 @@ export function initCursor() {
 
   const dot = document.createElement("div");
   dot.className = "cursor-dot";
-  dot.innerHTML = '<span class="cursor-dot__inner"></span>';
+  dot.innerHTML = '<span class="cursor-dot__inner"><span class="cursor-dot__label"></span></span>';
   document.body.appendChild(dot);
+  const label = dot.querySelector(".cursor-dot__label");
 
   gsap.set(dot, { xPercent: -50, yPercent: -50 });
   const moveX = gsap.quickTo(dot, "x", { duration: 0.15, ease: "power3.out" });
@@ -20,6 +21,14 @@ export function initCursor() {
   });
 
   document.addEventListener("mouseover", (event) => {
+    const labelTarget = event.target.closest("[data-cursor-label]");
+    if (labelTarget) {
+      label.textContent = labelTarget.dataset.cursorLabel;
+      dot.classList.add("cursor-dot--label");
+      dot.classList.remove("cursor-dot--grow");
+      return;
+    }
+    dot.classList.remove("cursor-dot--label");
     dot.classList.toggle("cursor-dot--grow", !!event.target.closest(GROW_SELECTOR));
   });
 

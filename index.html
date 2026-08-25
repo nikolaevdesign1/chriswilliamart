@@ -12,6 +12,12 @@
     />
   </head>
   <body>
+    <div id="preloader" class="preloader">
+      <div class="preloader__scatter"></div>
+      <div class="preloader__bar"><div class="preloader__bar-fill"></div></div>
+      <p class="preloader__percent">0%</p>
+    </div>
+
     <header class="site-header">
       <nav class="site-nav">
         <a class="site-nav__link is-active" href="/" data-nav-field>gallery area</a>
@@ -25,17 +31,37 @@
     </header>
 
     <main>
-      <div id="view-field" class="field">
+      <div id="view-field" class="field grid-texture">
         <div class="field-world"></div>
       </div>
-      <div id="view-work" class="page" hidden></div>
+      <div id="view-work" class="grid-texture" data-cursor-label="back to gallery" hidden></div>
+      <div id="view-list" class="list-view" hidden>
+        <div class="list-panel">
+          <div class="list-panel__head">
+            <span>number</span>
+            <span>project</span>
+            <span>artist</span>
+          </div>
+          <ul class="list-panel__rows"></ul>
+        </div>
+
+        <div class="list-showcase">
+          <div class="list-showcase__header">
+            <h2 class="list-showcase__name"></h2>
+            <p class="list-showcase__bio"></p>
+          </div>
+          <div class="list-showcase__strip">
+            <div class="list-showcase__track"></div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer class="site-footer">
       <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>
       <div class="view-toggle">
         <a class="view-toggle__btn is-active" href="/" data-nav-field>Field</a>
-        <a class="view-toggle__btn" href="/list.html">List</a>
+        <a class="view-toggle__btn" href="/list" data-nav-list>List</a>
       </div>
       <p class="site-footer__rights">all rights reserved 2026</p>
     </footer>

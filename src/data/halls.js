@@ -4,7 +4,6 @@ const img = (file) => modules[`../assets/img/${file}`];
 export const halls = [
   {
     id: "wolfstein",
-    cell: { col: 0, row: 0 },
     artist: {
       name: "Jack Wolfstein",
       bio: "Renowned for his innovative style and unique approach to art. With a career spanning over a decade, he blends traditional techniques with modern elements, creating pieces that tell compelling stories.",
@@ -22,7 +21,6 @@ export const halls = [
   },
   {
     id: "lindqvist",
-    cell: { col: 1, row: 0 },
     artist: {
       name: "Mira Lindqvist",
       bio: "A Scandinavian painter drawn to ceremony and spectacle. Her canvases stage crowded, theatrical scenes where light does the work of narration.",
@@ -37,7 +35,6 @@ export const halls = [
   },
   {
     id: "kern",
-    cell: { col: 2, row: 0 },
     artist: {
       name: "Tobias Kern",
       bio: "Works in oil and archive photography, revisiting old portraiture with a restorer's patience and a forger's curiosity.",
@@ -52,7 +49,6 @@ export const halls = [
   },
   {
     id: "osei",
-    cell: { col: 0, row: 1 },
     artist: {
       name: "Amara Osei",
       bio: "A collector of found archives and civic photography, reassembled into quiet, democratic compositions about ordinary places.",
@@ -66,7 +62,6 @@ export const halls = [
   },
   {
     id: "cole",
-    cell: { col: 1, row: 1 },
     artist: {
       name: "River Cole",
       bio: "Street-raised and self-taught, painting directly onto walls and salvaged board — faces first, always faces.",
@@ -81,7 +76,6 @@ export const halls = [
   },
   {
     id: "calder",
-    cell: { col: 2, row: 1 },
     artist: {
       name: "Ines Calder",
       bio: "Trained as a botanist before turning to paint. Her work stays close to the specimen table — close, patient, a little clinical.",
@@ -96,7 +90,6 @@ export const halls = [
   },
   {
     id: "ferreira",
-    cell: { col: 0, row: 2 },
     artist: {
       name: "Sam Ferreira",
       bio: "More interested in the studio than the finished canvas — process, tools, and residue are the real subject of the work.",

@@ -14,17 +14,33 @@ const FRAGMENT = /* glsl */ `
   uniform float uHover;
   uniform float uTime;
   uniform vec2 uMouse;
+  uniform vec2 uTexSize;
+  uniform vec2 uPlaneSize;
   varying vec2 vUv;
+
+  // Maps the plane's 0..1 UV onto a centered, cropped window of the texture,
+  // matching CSS object-fit:cover instead of stretching the whole image.
+  vec2 coverUv(vec2 uv) {
+    float texAspect = uTexSize.x / uTexSize.y;
+    float planeAspect = uPlaneSize.x / uPlaneSize.y;
+    vec2 scale = vec2(1.0);
+    if (texAspect > planeAspect) {
+      scale.x = planeAspect / texAspect;
+    } else {
+      scale.y = texAspect / planeAspect;
+    }
+    return (uv - 0.5) * scale + 0.5;
+  }
 
   void main() {
     vec2 dir = vUv - uMouse;
     float dist = length(dir);
     float ripple = sin(dist * 40.0 - uTime * 6.0) * 0.015 * uHover * smoothstep(0.55, 0.0, dist);
-    vec2 uv = vUv + normalize(dir + 0.0001) * ripple;
+    vec2 rippleDir = normalize(dir + 0.0001);
 
-    float r = texture2D(uTexture, uv + normalize(dir + 0.0001) * ripple * 0.4).r;
-    float g = texture2D(uTexture, uv).g;
-    float b = texture2D(uTexture, uv - normalize(dir + 0.0001) * ripple * 0.4).b;
+    float r = texture2D(uTexture, coverUv(vUv + rippleDir * ripple * 1.4)).r;
+    float g = texture2D(uTexture, coverUv(vUv + rippleDir * ripple)).g;
+    float b = texture2D(uTexture, coverUv(vUv + rippleDir * ripple * 0.6)).b;
 
     gl_FragColor = vec4(r, g, b, 1.0);
   }
@@ -39,10 +55,23 @@ let rafId = null;
 
 function loadTexture(src) {
   if (textureCache.has(src)) return textureCache.get(src);
-  const texture = new THREE.TextureLoader().load(src);
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const texture = new THREE.TextureLoader().load(src, (tex) => {
+    if (tex === mesh.material.uniforms.uTexture.value) {
+      mesh.material.uniforms.uTexSize.value.set(tex.image.naturalWidth, tex.image.naturalHeight);
+    }
+  });
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   textureCache.set(src, texture);
   return texture;
+}
+
+function setTexture(texture) {
+  mesh.material.uniforms.uTexture.value = texture;
+  if (texture.image?.naturalWidth) {
+    mesh.material.uniforms.uTexSize.value.set(texture.image.naturalWidth, texture.image.naturalHeight);
+  }
 }
 
 function setCameraSize(w, h) {
@@ -75,6 +104,8 @@ export function initRipple() {
       uHover: { value: 0 },
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      uTexSize: { value: new THREE.Vector2(1, 1) },
+      uPlaneSize: { value: new THREE.Vector2(1, 1) },
     },
     transparent: true,
     side: THREE.DoubleSide,
@@ -111,6 +142,7 @@ function placeMesh(rect) {
   const centerY = window.innerHeight - (rect.top + rect.height / 2);
   mesh.position.set(rect.left + rect.width / 2, centerY, 0);
   mesh.scale.set(rect.width, rect.height, 1);
+  mesh.material.uniforms.uPlaneSize.value.set(rect.width, rect.height);
 }
 
 export function showRipple(tile, imageSrc) {
@@ -119,7 +151,7 @@ export function showRipple(tile, imageSrc) {
   }
 
   const rect = tile.getBoundingClientRect();
-  mesh.material.uniforms.uTexture.value = loadTexture(imageSrc);
+  setTexture(loadTexture(imageSrc));
   placeMesh(rect);
   mesh.visible = true;
   activeTile = tile;
@@ -158,7 +190,7 @@ export function revealTransition(tile, imageSrc, target, onDone) {
   followTile = false;
 
   const rect = tile.getBoundingClientRect();
-  mesh.material.uniforms.uTexture.value = loadTexture(imageSrc);
+  setTexture(loadTexture(imageSrc));
   placeMesh(rect);
   mesh.visible = true;
   activeTile = tile;

@@ -165,14 +165,26 @@ button {
   background: var(--color-placeholder);
 }
 
-/* ---------- List view ---------- */
+/* ---------- List view (merged into the SPA) ---------- */
+
+.list-view {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg);
+}
 
 .list-panel {
-  position: fixed;
+  position: absolute;
   left: calc(var(--u) * 24);
   top: calc(var(--u) * 102);
   width: calc(var(--u) * 610);
-  z-index: 5;
+  bottom: calc(var(--u) * 60);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.list-panel::-webkit-scrollbar {
+  display: none;
 }
 
 .list-panel__head {
@@ -194,124 +206,88 @@ button {
   align-items: baseline;
   font-size: calc(var(--u) * 14);
   letter-spacing: -0.03em;
-  padding-bottom: calc(var(--u) * 8);
-  margin-bottom: calc(var(--u) * 8);
+  padding: calc(var(--u) * 6) 0;
+  cursor: default;
   border-bottom: 1px solid rgba(40, 40, 40, 0.12);
-}
-
-.list-panel__artist {
-  text-align: left;
   transition: opacity 0.2s ease;
 }
 
-.list-panel__artist:hover {
-  opacity: 0.6;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+.list-panel__row:hover,
+.list-panel__row.is-active {
+  opacity: 0.55;
 }
 
-/* Floating thumbnail preview that follows a hovered row */
+/* Right showcase: artist heading + bio above a horizontally scrolling,
+   ripple-enabled strip of their works — mirrors the Figma list layout. */
 
-.list-preview {
-  position: fixed;
-  left: calc(var(--u) * 700);
-  top: var(--preview-y, 50%);
-  width: calc(var(--u) * 340);
-  height: calc(var(--u) * 240);
-  transform: translateY(-50%) scale(0.96);
-  opacity: 0;
-  z-index: 6;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  overflow: hidden;
-  background: var(--color-placeholder);
-}
-
-.list-preview.is-visible {
-  opacity: 1;
-  transform: translateY(-50%) scale(1);
-}
-
-.list-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Author panel: bio + horizontally scrolling works with the ripple effect */
-
-.artist-panel {
-  position: fixed;
-  right: calc(var(--u) * 24);
-  top: calc(var(--u) * 102);
-  width: calc(var(--u) * 1160);
-  z-index: 7;
-  opacity: 0;
-  transform: translateX(24px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.artist-panel.is-open {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.artist-panel__close {
+.list-showcase {
   position: absolute;
-  top: 0;
+  left: calc(var(--u) * 812);
+  top: calc(var(--u) * 222);
   right: 0;
-  font-size: 24px;
-  line-height: 1;
-  opacity: 0.5;
+  bottom: calc(var(--u) * 60);
 }
 
-.artist-panel__close:hover {
-  opacity: 1;
+.list-showcase__header {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--u) * 60);
+  margin-bottom: calc(var(--u) * 40);
 }
 
-.artist-panel__name {
+.list-showcase__name {
+  flex: none;
+  width: calc(var(--u) * 300);
   font-size: calc(var(--u) * 40);
   font-weight: 700;
   letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
-.artist-panel__bio {
-  margin-top: calc(var(--u) * 12);
-  max-width: calc(var(--u) * 620);
+.list-showcase__bio {
+  max-width: calc(var(--u) * 520);
   font-size: calc(var(--u) * 14);
   letter-spacing: -0.03em;
   line-height: 1.5;
   opacity: 0.7;
 }
 
-.artist-panel__strip {
-  margin-top: calc(var(--u) * 28);
+.list-showcase__strip {
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  height: calc(var(--u) * 556);
 }
 
-.artist-panel__strip::-webkit-scrollbar {
+.list-showcase__strip::-webkit-scrollbar {
   display: none;
 }
 
-.artist-panel__track {
+.list-showcase__track {
   display: flex;
   gap: calc(var(--u) * 20);
+  height: 100%;
 }
 
-.artist-tile {
+.list-tile {
   display: block;
   flex: none;
-  width: calc(var(--u) * 320);
-  height: calc(var(--u) * 420);
+  width: calc(var(--u) * 453);
+  height: 100%;
   background: var(--color-placeholder);
   overflow: hidden;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.2s ease;
   -webkit-user-drag: none;
   user-select: none;
 }
 
-.artist-tile img {
+.list-tile.is-focused {
+  outline-color: #3b82f6;
+}
+
+.list-tile img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -326,13 +302,6 @@ button {
 .stage {
   position: fixed;
   inset: 0;
-}
-
-/* ---------- Scrolling page canvas (artwork detail) ---------- */
-
-.page {
-  position: relative;
-  height: calc(var(--u) * var(--page-h, 1080));
 }
 
 /* ---------- Shared absolute-positioning + typography utilities ---------- */
@@ -425,6 +394,15 @@ button {
   z-index: 3;
 }
 
+/* ---------- Shared grid-texture background ---------- */
+
+.grid-texture {
+  background-color: var(--color-bg);
+  background-image: linear-gradient(to right, rgba(40, 40, 40, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(40, 40, 40, 0.05) 1px, transparent 1px);
+  background-size: 100px 100px;
+}
+
 /* ---------- Infinite field ---------- */
 
 .field {
@@ -434,10 +412,6 @@ button {
   cursor: grab;
   touch-action: none;
   user-select: none;
-  background: var(--color-bg);
-  background-image: linear-gradient(to right, rgba(40, 40, 40, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(40, 40, 40, 0.05) 1px, transparent 1px);
-  background-size: 100px 100px;
 }
 
 .field.is-dragging {
@@ -532,4 +506,149 @@ button {
 
 .cursor-dot--grow .cursor-dot__inner {
   transform: scale(2.6);
+}
+
+.cursor-dot__label {
+  display: block;
+  opacity: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  color: var(--color-bg);
+  transform: scale(0.4);
+  transition: opacity 0.2s ease;
+}
+
+.cursor-dot--label .cursor-dot__inner {
+  width: auto;
+  height: auto;
+  padding: 10px 16px;
+  border-radius: 999px;
+}
+
+.cursor-dot--label .cursor-dot__label {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Work detail layout ---------- */
+
+.work-layout {
+  position: fixed;
+  inset: 0;
+  cursor: none;
+}
+
+/* Positioned with a plain formula (not flex-centered as a block) so its
+   on-screen rect stays predictable — the reveal-transition target in
+   design-canvas.js's workHeroRect() mirrors these numbers exactly. */
+.work-hero {
+  position: absolute;
+  left: 50%;
+  top: 12vh;
+  transform: translateX(-50%);
+  width: min(46vw, 520px);
+  aspect-ratio: 610 / 896;
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+
+.work-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.work-info {
+  position: absolute;
+  left: 50%;
+  bottom: 8vh;
+  transform: translateX(-50%);
+  width: min(90vw, 960px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.work-info__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.work-info__title,
+.work-info__year {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.work-info__bio {
+  max-width: 520px;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+.work-info__credit {
+  font-size: 12px;
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+/* ---------- Preloader ---------- */
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.preloader__scatter {
+  position: absolute;
+  inset: 0;
+}
+
+.preloader__item {
+  position: absolute;
+  transform: rotate(var(--r));
+  box-shadow: 0 16px 32px rgba(40, 40, 40, 0.18);
+  overflow: hidden;
+}
+
+.preloader__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preloader__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(40, 40, 40, 0.12);
+}
+
+.preloader__bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-fg);
+  transition: width 0.2s ease;
+}
+
+.preloader__percent {
+  position: absolute;
+  right: 24px;
+  bottom: 14px;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+  opacity: 0.6;
 }

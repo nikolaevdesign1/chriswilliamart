@@ -1,62 +1,50 @@
 import { halls } from "../data/halls.js";
-import { showRipple, moveRipple, hideRipple } from "./ripple.js";
+import { showRipple, moveRipple, hideRipple, revealTransition } from "./ripple.js";
+import { navigate } from "./router.js";
+import { workHeroRect } from "./design-canvas.js";
+
+let root, rows, activeHallId;
 
 function flattenWorks() {
-  const rows = [];
+  const list = [];
   halls.forEach((hall) => {
-    hall.works.forEach((work) => {
-      rows.push({ hall, work });
-    });
+    hall.works.forEach((work) => list.push({ hall, work }));
   });
-  return rows;
+  return list;
 }
 
-function renderRows(rows) {
-  const container = document.querySelector(".list-panel__rows");
-  container.innerHTML = rows
+function renderRows(list) {
+  const container = root.querySelector(".list-panel__rows");
+  container.innerHTML = list
     .map(
       ({ hall, work }, index) => `
-        <li class="list-panel__row">
+        <li class="list-panel__row" data-hall-id="${hall.id}" data-work-id="${work.id}">
           <span>${String(index + 1).padStart(2, "0")}</span>
           <span>${work.title}</span>
-          <button type="button" class="list-panel__artist" data-hall-id="${hall.id}">${hall.artist.name}</button>
+          <span>${hall.artist.name}</span>
         </li>
       `
     )
     .join("");
 }
 
-function initPreview(rows) {
-  const preview = document.querySelector(".list-preview");
-  const img = preview.querySelector("img");
-  const rowEls = document.querySelectorAll(".list-panel__row");
+function showHall(hallId, focusWorkId) {
+  const hall = halls.find((h) => h.id === hallId);
+  if (!hall) return;
+  activeHallId = hallId;
 
-  rowEls.forEach((row, index) => {
-    const { work } = rows[index];
-    row.addEventListener("mouseenter", () => {
-      img.src = work.image;
-      preview.classList.add("is-visible");
-    });
-    row.addEventListener("mousemove", (event) => {
-      preview.style.setProperty("--preview-y", `${event.clientY}px`);
-    });
-    row.addEventListener("mouseleave", () => {
-      preview.classList.remove("is-visible");
-    });
-  });
-}
+  root.querySelector(".list-showcase__name").textContent = hall.artist.name;
+  root.querySelector(".list-showcase__bio").textContent = hall.artist.bio;
 
-function renderArtistPanel(hall) {
-  const panel = document.querySelector(".artist-panel");
-  panel.querySelector(".artist-panel__name").textContent = hall.artist.name;
-  panel.querySelector(".artist-panel__bio").textContent = hall.artist.bio;
-
-  const track = panel.querySelector(".artist-panel__track");
+  const track = root.querySelector(".list-showcase__track");
   track.innerHTML = "";
   hall.works.forEach((work) => {
     const tile = document.createElement("a");
-    tile.className = "artist-tile";
+    tile.className = "list-tile";
     tile.href = `/work/${hall.id}/${work.id}`;
+    tile.classList.toggle("is-focused", work.id === focusWorkId);
+    tile.draggable = false;
+    tile.addEventListener("dragstart", (event) => event.preventDefault());
 
     const img = document.createElement("img");
     img.src = work.image;
@@ -64,54 +52,47 @@ function renderArtistPanel(hall) {
     img.draggable = false;
     tile.appendChild(img);
 
-    tile.draggable = false;
-    tile.addEventListener("dragstart", (event) => event.preventDefault());
     tile.addEventListener("mouseenter", () => showRipple(tile, work.image));
     tile.addEventListener("mousemove", (event) => moveRipple(tile, event));
     tile.addEventListener("mouseleave", () => hideRipple(tile));
+    tile.addEventListener("click", (event) => {
+      event.preventDefault();
+      const target = workHeroRect();
+      revealTransition(tile, work.image, target, () => {
+        navigate("work", { hallId: hall.id, workId: work.id });
+      });
+    });
 
     track.appendChild(tile);
   });
-
-  panel.hidden = false;
-  requestAnimationFrame(() => panel.classList.add("is-open"));
 }
 
-function closeArtistPanel() {
-  const panel = document.querySelector(".artist-panel");
-  panel.classList.remove("is-open");
-  setTimeout(() => {
-    panel.hidden = true;
-  }, 300);
+function highlightRow(hallId, workId) {
+  root.querySelectorAll(".list-panel__row").forEach((row) => {
+    row.classList.toggle("is-active", row.dataset.hallId === hallId && row.dataset.workId === workId);
+  });
 }
 
-function initArtistPanel() {
-  let openHallId = null;
+export function initListPage(rootEl) {
+  root = rootEl;
+  const list = flattenWorks();
+  renderRows(list);
+  rows = [...root.querySelectorAll(".list-panel__row")];
 
-  document.querySelectorAll(".list-panel__artist").forEach((button) => {
-    button.addEventListener("click", () => {
-      const hallId = button.dataset.hallId;
-      if (hallId === openHallId) {
-        closeArtistPanel();
-        openHallId = null;
-        return;
+  rows.forEach((row) => {
+    row.addEventListener("mouseenter", () => {
+      const { hallId, workId } = row.dataset;
+      highlightRow(hallId, workId);
+      if (hallId !== activeHallId) showHall(hallId, workId);
+      else {
+        root.querySelectorAll(".list-tile").forEach((tile) => {
+          tile.classList.toggle("is-focused", tile.href.endsWith(`/${hallId}/${workId}`));
+        });
       }
-      const hall = halls.find((h) => h.id === hallId);
-      if (!hall) return;
-      renderArtistPanel(hall);
-      openHallId = hallId;
     });
   });
 
-  document.querySelector(".artist-panel__close").addEventListener("click", () => {
-    closeArtistPanel();
-    openHallId = null;
-  });
-}
-
-export function initListPage() {
-  const rows = flattenWorks();
-  renderRows(rows);
-  initPreview(rows);
-  initArtistPanel();
+  const first = list[0];
+  showHall(first.hall.id, first.work.id);
+  highlightRow(first.hall.id, first.work.id);
 }

@@ -2,12 +2,15 @@ const routes = new Map();
 let current = null;
 
 function parse(path) {
-  const [, name, a, b] = path.match(/^\/work\/([^/]+)\/([^/]+)$/) ? ["", "work", ...path.slice(6).split("/")] : [null, "field"];
-  return { name, params: name === "work" ? { hallId: a, workId: b } : {} };
+  const workMatch = path.match(/^\/work\/([^/]+)\/([^/]+)$/);
+  if (workMatch) return { name: "work", params: { hallId: workMatch[1], workId: workMatch[2] } };
+  if (path === "/list") return { name: "list", params: {} };
+  return { name: "field", params: {} };
 }
 
 function pathFor(name, params) {
   if (name === "work") return `/work/${params.hallId}/${params.workId}`;
+  if (name === "list") return "/list";
   return "/";
 }
 

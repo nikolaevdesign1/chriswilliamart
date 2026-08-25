@@ -1,5 +1,5 @@
 import { halls } from "../data/halls.js";
-import { CELL_W, CELL_H, WORLD_W, WORLD_H, layoutWorks, labelPosition } from "./field-layout.js";
+import { CELL_W, CELL_H, GRID_COLS, GRID_ROWS, WORLD_W, WORLD_H, layoutWorks, labelPosition } from "./field-layout.js";
 
 const SMOOTHING = 0.085;
 
@@ -25,9 +25,15 @@ function wrap(value, size) {
 
 function build() {
   world.innerHTML = "";
-  halls.forEach((hall) => {
-    const baseX = hall.cell.col * CELL_W;
-    const baseY = hall.cell.row * CELL_H;
+  // Every grid cell gets a hall — with only 7 halls and 9 cells, the last
+  // two repeat rather than leaving the field with empty rooms.
+  const cellCount = GRID_COLS * GRID_ROWS;
+  for (let cellIndex = 0; cellIndex < cellCount; cellIndex++) {
+    const hall = halls[cellIndex % halls.length];
+    const col = cellIndex % GRID_COLS;
+    const row = Math.floor(cellIndex / GRID_COLS);
+    const baseX = col * CELL_W;
+    const baseY = row * CELL_H;
 
     const label = labelPosition();
     const heading = document.createElement("div");
@@ -77,7 +83,7 @@ function build() {
 
       world.appendChild(tile);
     });
-  });
+  }
 }
 
 function screenCenter() {
