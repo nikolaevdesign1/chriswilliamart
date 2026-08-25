@@ -33,6 +33,7 @@ const FRAGMENT = /* glsl */ `
 let renderer, scene, camera, mesh, canvas;
 let textureCache = new Map();
 let activeTile = null;
+let followTile = false;
 let clock = new THREE.Clock();
 let rafId = null;
 
@@ -91,6 +92,13 @@ export function initRipple() {
 
   const loop = () => {
     mesh.material.uniforms.uTime.value = clock.getElapsedTime();
+    // Keep the plane glued to its tile every frame — during a field pan
+    // the tile keeps moving but stops sending it mousemove events (they
+    // get redirected once pointer capture kicks in), so relying on
+    // mousemove alone lets the plane drift away from the tile underneath.
+    if (followTile && mesh.visible && activeTile && activeTile.isConnected) {
+      placeMesh(activeTile.getBoundingClientRect());
+    }
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(loop);
   };
@@ -115,6 +123,7 @@ export function showRipple(tile, imageSrc) {
   placeMesh(rect);
   mesh.visible = true;
   activeTile = tile;
+  followTile = true;
 
   gsap.to(mesh.material.uniforms.uHover, { value: 1, duration: 0.5, ease: "power2.out" });
 }
@@ -138,6 +147,7 @@ export function hideRipple(tile) {
       if (activeTile === tile) {
         mesh.visible = false;
         activeTile = null;
+        followTile = false;
       }
     },
   });
@@ -145,6 +155,7 @@ export function hideRipple(tile) {
 
 export function revealTransition(tile, imageSrc, target, onDone) {
   gsap.killTweensOf(mesh.material.uniforms.uHover);
+  followTile = false;
 
   const rect = tile.getBoundingClientRect();
   mesh.material.uniforms.uTexture.value = loadTexture(imageSrc);
