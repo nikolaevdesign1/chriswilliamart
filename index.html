@@ -14,7 +14,7 @@
   <body>
     <header class="site-header">
       <nav class="site-nav">
-        <a class="site-nav__link is-active" href="/">gallery area</a>
+        <a class="site-nav__link is-active" href="/" data-nav-field>gallery area</a>
         <a class="site-nav__link" href="/about.html">about</a>
         <a class="site-nav__link" href="/contacts.html">contacts</a>
       </nav>
@@ -24,59 +24,22 @@
       </p>
     </header>
 
-    <main class="wall" id="gallery">
-      <div class="wall__track wall__track--home">
-        <a class="tile" href="/work.html" style="--x:24;--y:118;--w:295;--h:448">
-          <img src="/src/assets/img/gallery/artwork-01.jpg" alt="Last day of Pompeii" loading="lazy" />
-        </a>
-        <figure class="tile" style="--x:24;--y:631;--w:295;--h:224">
-          <img src="/src/assets/img/gallery/artwork-06.jpg" alt="Landscape study" loading="lazy" />
-        </figure>
-        <figure class="tile" style="--x:497;--y:291;--w:295;--h:448">
-          <img src="/src/assets/img/gallery/artwork-02.jpg" alt="The Great Wave off Kanagawa" loading="lazy" />
-        </figure>
-        <figure class="tile" style="--x:970;--y:118;--w:295;--h:448">
-          <img src="/src/assets/img/gallery/artwork-03.jpg" alt="Still life with flowers" loading="lazy" />
-        </figure>
-        <figure class="tile" style="--x:972;--y:631;--w:295;--h:224">
-          <img src="/src/assets/img/gallery/artwork-07.jpg" alt="Portrait study" loading="lazy" />
-        </figure>
-        <figure class="tile" style="--x:1443;--y:291;--w:295;--h:448">
-          <img src="/src/assets/img/gallery/artwork-04.jpg" alt="Abstract face" loading="lazy" />
-        </figure>
-        <figure class="tile" style="--x:1872;--y:140;--w:295;--h:448">
-          <img src="/src/assets/img/gallery/artwork-05.jpg" alt="Birds among branches" loading="lazy" />
-        </figure>
-
-        <figure class="tile tile--placeholder" style="--x:2284;--y:140;--w:295;--h:224"></figure>
-        <figure class="tile tile--placeholder" style="--x:2284;--y:428;--w:295;--h:224"></figure>
-        <figure class="tile tile--placeholder" style="--x:2284;--y:716;--w:295;--h:224"></figure>
-
-        <article class="artist-spotlight" style="--x:2842;--y:119;--w:520">
-          <h2 class="artist-spotlight__name">
-            <span>Jack</span>
-            <span>Wolfstein</span>
-          </h2>
-          <p class="artist-spotlight__bio">
-            Artist Jack Wolfstein is renowned for his innovative style and unique approach to art. With a career
-            spanning over a decade, he has captivated audiences with his thought-provoking and emotionally charged
-            works. Drawing inspiration from the surrounding nature and personal experiences, Wolfstein blends
-            traditional techniques with modern elements, creating pieces that tell compelling stories. Each artwork
-            reflects a piece of his soul, inviting viewers to delve into the depths of his creativity.
-          </p>
-        </article>
+    <main>
+      <div id="view-field" class="field">
+        <div class="field-world"></div>
       </div>
+      <div id="view-work" class="page" hidden></div>
     </main>
 
     <footer class="site-footer">
       <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>
       <div class="view-toggle">
-        <a class="view-toggle__btn is-active" href="/">Wall</a>
+        <a class="view-toggle__btn is-active" href="/" data-nav-field>Field</a>
         <a class="view-toggle__btn" href="/list.html">List</a>
       </div>
       <p class="site-footer__rights">all rights reserved 2026</p>
     </footer>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/app.js"></script>
   </body>
 </html>

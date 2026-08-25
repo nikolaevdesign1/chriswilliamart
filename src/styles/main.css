@@ -386,3 +386,74 @@ button {
   inset: 0;
   z-index: 3;
 }
+
+/* ---------- Infinite field ---------- */
+
+.field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background: var(--color-bg);
+}
+
+.field.is-dragging {
+  cursor: grabbing;
+}
+
+.field-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.field-tile {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--w) * 1px);
+  height: calc(var(--h) * 1px);
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+
+.field-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.15s ease;
+}
+
+.field-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 420px;
+  color: var(--color-fg);
+  pointer-events: none;
+}
+
+.field-label__name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.field-label__bio {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.6;
+}
+
+/* ---------- WebGL ripple overlay ---------- */
+
+.ripple-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
