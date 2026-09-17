@@ -43,7 +43,23 @@ function build() {
     heading.innerHTML = `<p class="field-label__name">${hall.artist.name}</p><p class="field-label__bio">${hall.artist.bio}</p>`;
     world.appendChild(heading);
 
-    layoutWorks(hall.works).forEach(({ work, x, y, w, h }) => {
+    const works = layoutWorks(hall.works, hall.id);
+
+    // The very first cell's content sets where the camera starts — computed
+    // from the actual placed tiles (their bounding-box centroid) rather than
+    // a guessed ratio of the cell size, so the opening view is guaranteed to
+    // land on real content regardless of cell size or scatter tuning.
+    if (cellIndex === 0 && works.length) {
+      const minX = Math.min(...works.map((w) => w.x));
+      const maxX = Math.max(...works.map((w) => w.x + w.w));
+      const minY = Math.min(...works.map((w) => w.y));
+      const maxY = Math.max(...works.map((w) => w.y + w.h));
+      const focus = { x: baseX + (minX + maxX) / 2, y: baseY + (minY + maxY) / 2 };
+      camera = { ...focus };
+      target = { ...focus };
+    }
+
+    works.forEach(({ work, x, y, w, h }) => {
       const tile = document.createElement("a");
       tile.className = "field-tile";
       tile.href = `/work/${hall.id}/${work.id}`;
@@ -99,12 +115,15 @@ function tick() {
   for (const node of nodes) {
     const bx = parseFloat(node.style.getPropertyValue("--x"));
     const by = parseFloat(node.style.getPropertyValue("--y"));
-    const w = parseFloat(node.style.getPropertyValue("--w")) || 0;
-    const h = parseFloat(node.style.getPropertyValue("--h")) || 0;
     const dx = wrapCentered(bx - camera.x, WORLD_W);
     const dy = wrapCentered(by - camera.y, WORLD_H);
-    const screenX = center.x + dx - w / 2;
-    const screenY = center.y + dy - h / 2;
+    // --x/--y are each tile's top-left corner (per field-layout.js), not a
+    // center point, so the screen position is a direct offset — no w/h
+    // subtraction here, or every tile renders shifted up-left by half its
+    // own size (label elements have no --w/--h, so they never had this
+    // shift, which is what made them collide with tiles below them).
+    const screenX = center.x + dx;
+    const screenY = center.y + dy;
     node.style.transform = `translate3d(${Math.round(screenX)}px, ${Math.round(screenY)}px, 0)`;
   }
 

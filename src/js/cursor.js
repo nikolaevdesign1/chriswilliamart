@@ -1,6 +1,6 @@
 import gsap from "gsap";
 
-const GROW_SELECTOR = ".site-nav__link, .site-logo, .view-toggle__btn, .site-footer__credit a";
+const GROW_SELECTOR = ".site-nav__link, .site-logo, .view-toggle__btn, .site-footer__credit a, .list-panel__author";
 
 export function initCursor() {
   if (window.matchMedia("(pointer: coarse)").matches) return;

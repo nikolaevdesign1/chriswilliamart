@@ -65,9 +65,10 @@ button {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: calc(var(--u) * 16);
-  font-size: calc(var(--u) * 14);
-  letter-spacing: -0.03em;
+  gap: calc(var(--u) * 20);
+  font-size: calc(var(--u) * 18);
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .site-nav__link {
@@ -127,7 +128,9 @@ button {
 
 .view-toggle {
   display: flex;
-  gap: calc(var(--u) * 16);
+  gap: calc(var(--u) * 20);
+  font-size: calc(var(--u) * 18);
+  font-weight: 500;
 }
 
 .view-toggle__btn {
@@ -217,6 +220,88 @@ button {
   opacity: 0.55;
 }
 
+.list-panel__author {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Full-image popup opened by clicking a row in the list. */
+.list-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--u) * 20);
+  background: rgba(20, 20, 20, 0.94);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.list-lightbox.is-open {
+  pointer-events: auto;
+}
+
+.list-lightbox__img {
+  max-width: 82vw;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+}
+
+.list-lightbox__caption {
+  color: #f4f5f5;
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.02em;
+  opacity: 0.7;
+}
+
+.list-lightbox__close {
+  position: absolute;
+  top: calc(var(--u) * 24);
+  right: calc(var(--u) * 24);
+  color: #f4f5f5;
+  font-size: calc(var(--u) * 14);
+  letter-spacing: -0.02em;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.list-lightbox__close:hover {
+  opacity: 1;
+}
+
+/* Floating preview of the row currently under the cursor — independent of
+   the showcase panel, which only switches when an author is clicked. */
+.list-hover-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: calc(var(--u) * 220);
+  height: calc(var(--u) * 280);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 40;
+  background: var(--color-placeholder);
+}
+
+.list-hover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* Right showcase: artist heading + bio above a horizontally scrolling,
    ripple-enabled strip of their works — mirrors the Figma list layout. */
 
@@ -276,15 +361,8 @@ button {
   height: 100%;
   background: var(--color-placeholder);
   overflow: hidden;
-  outline: 2px solid transparent;
-  outline-offset: -2px;
-  transition: outline-color 0.2s ease;
   -webkit-user-drag: none;
   user-select: none;
-}
-
-.list-tile.is-focused {
-  outline-color: #3b82f6;
 }
 
 .list-tile img {
@@ -532,9 +610,21 @@ button {
 
 /* ---------- Work detail layout ---------- */
 
+#view-work {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+}
+
+/* Exactly one viewport tall, in normal flow rather than fixed — the vh-based
+   offsets on .work-hero/.work-info below still resolve to the same pixel
+   positions as long as this is the first thing in #view-work (so its top
+   edge sits at the viewport top when scrollTop is 0), which is also what
+   design-canvas.js's workHeroRect() assumes. */
 .work-layout {
-  position: fixed;
-  inset: 0;
+  position: relative;
+  height: 100vh;
   cursor: none;
 }
 
@@ -598,6 +688,236 @@ button {
   font-size: 12px;
   opacity: 0.5;
   white-space: nowrap;
+}
+
+.work-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5vh;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.35;
+}
+
+.work-detail {
+  position: relative;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 min(6vw, 60px) 14vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12vh;
+}
+
+.work-detail__mockup {
+  display: flex;
+  justify-content: center;
+  padding: 8vh 0 2vh;
+}
+
+/* A CSS-built "on the wall" mockup — mat + frame + soft shadow — standing in
+   for a real interior photo, so the piece reads as hung rather than as a
+   flat crop of the same hero image. */
+.work-detail__frame {
+  width: min(70vw, 640px);
+  aspect-ratio: 4 / 3;
+  padding: 4%;
+  background: #ece9e3;
+  box-shadow: 0 40px 80px -30px rgba(20, 20, 20, 0.35), 0 2px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.work-detail__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.work-detail__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 260px) 1fr;
+  gap: 8vw;
+  border-top: 1px solid rgba(40, 40, 40, 0.12);
+  padding-top: 6vh;
+}
+
+.work-specs__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(40, 40, 40, 0.08);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.work-specs__row dt {
+  opacity: 0.5;
+}
+
+.work-detail__note {
+  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.work-detail__more-title {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  opacity: 0.6;
+  margin-bottom: 3vh;
+}
+
+.work-detail__more-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.work-detail__more-item {
+  display: block;
+}
+
+.work-detail__more-item img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 10px;
+  background: var(--color-placeholder);
+  transition: opacity 0.2s ease;
+}
+
+.work-detail__more-item:hover img {
+  opacity: 0.75;
+}
+
+.work-detail__more-item span {
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  opacity: 0.6;
+}
+
+@media (max-width: 720px) {
+  .work-detail__meta {
+    grid-template-columns: 1fr;
+    gap: 4vh;
+  }
+
+  .work-detail__more-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- Mobile gallery (replaces field + list below the breakpoint) ---------- */
+
+.mobile-gallery[hidden] {
+  display: none;
+}
+
+.mobile-gallery {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-bg);
+}
+
+.mobile-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-hall {
+  flex: none;
+  width: 100vw;
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 96px 24px 72px;
+}
+
+.mobile-hall__header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.mobile-hall__header p {
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  opacity: 0.65;
+  max-width: 46ch;
+}
+
+.mobile-hall__strip {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 24px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-hall__strip::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-hall__tile {
+  flex: none;
+  width: 72vw;
+  max-width: 320px;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.mobile-hall__tile img {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--color-placeholder);
+  -webkit-user-drag: none;
+}
+
+.mobile-hall__tile span {
+  flex: none;
+  padding-top: 10px;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+  .site-nav,
+  .view-toggle {
+    display: none;
+  }
+
+  #view-field,
+  #view-list {
+    display: none !important;
+  }
 }
 
 /* ---------- Preloader ---------- */
