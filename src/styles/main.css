@@ -14,13 +14,20 @@
   box-sizing: border-box;
 }
 
-html {
-  overflow-x: hidden;
+/* Any author `display` value outranks the browser's default [hidden] rule,
+   so a routed view with its own display (grid, flex…) would stay on screen
+   while JS believes it is hidden — and silently cover the view underneath.
+   This one line makes the attribute authoritative for every element. */
+[hidden] {
+  display: none !important;
 }
 
 html,
 body {
   height: 100%;
+  /* Both elements, not just html: the page is a set of fixed full-screen
+     views and must never drift sideways, whatever a stray gesture asks for. */
+  overflow-x: hidden;
   overscroll-behavior: none;
 }
 
@@ -62,16 +69,19 @@ button {
   pointer-events: auto;
 }
 
+/* Chrome type is sized in real pixels, not the vh-derived --u: these are
+   reading sizes, and they shouldn't shrink just because the window is short. */
 .site-nav {
   display: flex;
   align-items: center;
-  gap: calc(var(--u) * 20);
-  font-size: calc(var(--u) * 18);
+  gap: 16px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .site-nav__link {
+  position: relative;
   transition: opacity 0.2s ease;
 }
 
@@ -79,18 +89,28 @@ button {
   opacity: 0.6;
 }
 
-.site-nav__link.is-active {
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+/* Drawn as a pseudo-element rather than text-decoration: the hover reveal
+   splits these labels into inline-block letters, and an underline set on the
+   parent does not carry into inline-block children — so the active marker
+   silently vanished the first time you hovered a link. */
+.site-nav__link.is-active::after,
+.view-toggle__btn.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.22em;
+  height: 1px;
+  background: currentColor;
 }
 
 .site-logo {
   display: flex;
   flex-direction: column;
   text-align: right;
-  font-size: calc(var(--u) * 18);
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1.3;
 }
 
@@ -103,9 +123,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(var(--u) * 24);
-  font-size: calc(var(--u) * 14);
-  letter-spacing: -0.03em;
+  padding: 22px 24px;
+  font-size: 11px;
+  letter-spacing: -0.01em;
   pointer-events: none;
 }
 
@@ -113,9 +133,80 @@ button {
   pointer-events: auto;
 }
 
+.site-footer__end {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
 .site-footer__credit,
 .site-footer__rights {
   opacity: 0.3;
+}
+
+/* A mixing-desk level meter rather than a speaker glyph — it reads as
+   "audio is running" on its own, and freezing the bars reads as "off". */
+.sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  font-size: 11px;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.sound-toggle:hover {
+  opacity: 1;
+}
+
+.sound-toggle__label {
+  opacity: 0.45;
+}
+
+.sound-toggle__meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
+}
+
+.sound-toggle__meter i {
+  display: block;
+  width: 2px;
+  height: 100%;
+  background: currentColor;
+  transform-origin: bottom center;
+  transform: scaleY(0.22);
+  animation: sound-bar 1.15s ease-in-out infinite;
+}
+
+.sound-toggle__meter i:nth-child(1) { animation-delay: -0.95s; }
+.sound-toggle__meter i:nth-child(2) { animation-delay: -0.35s; }
+.sound-toggle__meter i:nth-child(3) { animation-delay: -0.72s; }
+.sound-toggle__meter i:nth-child(4) { animation-delay: -0.15s; }
+.sound-toggle__meter i:nth-child(5) { animation-delay: -0.58s; }
+
+@keyframes sound-bar {
+  0%,
+  100% {
+    transform: scaleY(0.22);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.sound-toggle.is-muted .sound-toggle__meter i {
+  animation-play-state: paused;
+  transform: scaleY(0.16);
+}
+
+.sound-toggle.is-muted .sound-toggle__label {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
 }
 
 .site-footer__credit a {
@@ -128,12 +219,14 @@ button {
 
 .view-toggle {
   display: flex;
-  gap: calc(var(--u) * 20);
-  font-size: calc(var(--u) * 18);
+  gap: 16px;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .view-toggle__btn {
+  position: relative;
   transition: opacity 0.2s ease;
 }
 
@@ -141,9 +234,14 @@ button {
   opacity: 0.6;
 }
 
-.view-toggle__btn.is-active {
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+/* Clicking a nav link left a bright default focus ring on this design —
+   keep a visible focus marker, but one that belongs here. */
+.site-nav__link:focus-visible,
+.view-toggle__btn:focus-visible,
+.list-panel__author:focus-visible,
+.sound-toggle:focus-visible {
+  outline: 1px solid var(--color-fg);
+  outline-offset: 3px;
 }
 
 .tile {
@@ -170,19 +268,28 @@ button {
 
 /* ---------- List view (merged into the SPA) ---------- */
 
+/* Two real columns. This used to be absolutely positioned in vh-derived
+   units, which meant the showcase's horizontal position was driven by window
+   *height* — so any aspect ratio other than the design's collapsed the two
+   columns onto each other. */
 .list-view {
   position: fixed;
   inset: 0;
   background: var(--color-bg);
+  display: grid;
+  grid-template-columns: minmax(320px, 40%) 1fr;
+  gap: clamp(24px, 4vw, 80px);
+  padding: 92px 24px 60px;
 }
 
 .list-panel {
-  position: absolute;
-  left: calc(var(--u) * 24);
-  top: calc(var(--u) * 102);
-  width: calc(var(--u) * 610);
-  bottom: calc(var(--u) * 60);
+  min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  /* Explicit, because a box with one scrollable axis turns the other from
+     `visible` into `auto` — which let a sideways trackpad gesture drag the
+     number column out of view. The rows only ever scroll vertically. */
+  overflow-x: hidden;
   scrollbar-width: none;
 }
 
@@ -190,13 +297,18 @@ button {
   display: none;
 }
 
-.list-panel__head {
+.list-panel__head,
+.list-panel__row {
   display: grid;
-  grid-template-columns: calc(var(--u) * 157) calc(var(--u) * 315) 1fr;
-  font-size: calc(var(--u) * 14);
-  letter-spacing: -0.03em;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.list-panel__head {
+  font-size: 12px;
+  letter-spacing: -0.01em;
   color: var(--color-muted);
-  margin-bottom: calc(var(--u) * 20);
+  margin-bottom: 14px;
 }
 
 .list-panel__rows {
@@ -204,12 +316,10 @@ button {
 }
 
 .list-panel__row {
-  display: grid;
-  grid-template-columns: calc(var(--u) * 157) calc(var(--u) * 315) 1fr;
   align-items: baseline;
-  font-size: calc(var(--u) * 14);
-  letter-spacing: -0.03em;
-  padding: calc(var(--u) * 6) 0;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  padding: 7px 0;
   cursor: default;
   border-bottom: 1px solid rgba(40, 40, 40, 0.12);
   transition: opacity 0.2s ease;
@@ -306,42 +416,50 @@ button {
    ripple-enabled strip of their works — mirrors the Figma list layout. */
 
 .list-showcase {
-  position: absolute;
-  left: calc(var(--u) * 812);
-  top: calc(var(--u) * 222);
-  right: 0;
-  bottom: calc(var(--u) * 60);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  /* Keeps the strip's tiles from spilling out of their column and widening
+     the page; the strip scrolls inside this box, not past it. */
+  overflow: hidden;
+  padding-top: clamp(20px, 6vh, 90px);
 }
 
 .list-showcase__header {
   display: flex;
   align-items: flex-start;
-  gap: calc(var(--u) * 60);
-  margin-bottom: calc(var(--u) * 40);
+  gap: clamp(20px, 3vw, 60px);
+  margin-bottom: clamp(20px, 4vh, 44px);
 }
 
 .list-showcase__name {
   flex: none;
-  width: calc(var(--u) * 300);
-  font-size: calc(var(--u) * 40);
+  max-width: 44%;
+  font-size: clamp(26px, 2.6vw, 44px);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
 }
 
 .list-showcase__bio {
-  max-width: calc(var(--u) * 520);
-  font-size: calc(var(--u) * 14);
-  letter-spacing: -0.03em;
+  max-width: 54ch;
+  font-size: 13px;
+  letter-spacing: -0.01em;
   line-height: 1.5;
   opacity: 0.7;
 }
 
+/* Fills whatever height is left rather than claiming a fixed one, so the
+   strip can't spill past the footer or leave a gap under itself. */
 .list-showcase__strip {
+  flex: 1;
+  min-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  height: calc(var(--u) * 556);
+  /* No scroll-snap here: it yanks the strip to the nearest tile and fights
+     the inertial easing, which is the whole point of the slow glide. */
 }
 
 .list-showcase__strip::-webkit-scrollbar {
@@ -350,15 +468,15 @@ button {
 
 .list-showcase__track {
   display: flex;
-  gap: calc(var(--u) * 20);
+  gap: 18px;
   height: 100%;
 }
 
 .list-tile {
   display: block;
   flex: none;
-  width: calc(var(--u) * 453);
   height: 100%;
+  aspect-ratio: 3 / 4;
   background: var(--color-placeholder);
   overflow: hidden;
   -webkit-user-drag: none;
@@ -478,7 +596,7 @@ button {
   background-color: var(--color-bg);
   background-image: linear-gradient(to right, rgba(40, 40, 40, 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(40, 40, 40, 0.05) 1px, transparent 1px);
-  background-size: 100px 100px;
+  background-size: 190px 190px;
 }
 
 /* ---------- Infinite field ---------- */
@@ -508,11 +626,54 @@ button {
   top: 0;
   left: 0;
   width: calc(var(--w) * 1px);
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* The picture's own clipped box. The tile around it is taller now, because
+   it also carries the caption — keeping the frame separate means the caption
+   isn't clipped and the ripple plane still lines up with the artwork. */
+.field-tile__frame {
+  display: block;
+  width: 100%;
   height: calc(var(--h) * 1px);
   background: var(--color-placeholder);
   overflow: hidden;
-  -webkit-user-drag: none;
-  user-select: none;
+}
+
+.field-tile__num {
+  display: block;
+  padding-bottom: 7px;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  opacity: 0.4;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg);
+}
+
+.field-tile__caption {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.field-tile__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-tile__artist {
+  opacity: 0.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .field-tile img {
@@ -548,6 +709,192 @@ button {
   opacity: 0.6;
 }
 
+/* ---------- Water edges ----------
+   The field dissolves into blurred water at the left and right margins, so
+   artworks sink out of focus as they drift off-screen rather than being cut
+   off by a hard edge. Test pass — tune WIDTH/blur to taste. */
+
+/* Body-level and above the ripple canvas (z-index 8) on purpose: nested
+   inside .field it sat below the WebGL overlay, so the hover effect punched
+   a sharp hole straight through the water. */
+.field-water {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.water-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* The refraction itself lives in the SVG filter (see index.html). The strips
+   only decide where it applies and how it fades toward the middle. */
+.field-water span {
+  position: absolute;
+  backdrop-filter: url("#water-a");
+  -webkit-backdrop-filter: url("#water-a");
+  animation: water-drift 9s ease-in-out infinite alternate;
+}
+
+/* Fallback for engines that parse url() in backdrop-filter but don't render
+   it: without this the edges would simply show nothing at all. */
+@supports not (backdrop-filter: url("#water-a")) {
+  .field-water span {
+    backdrop-filter: blur(13px) saturate(1.12);
+    -webkit-backdrop-filter: blur(13px) saturate(1.12);
+  }
+}
+
+/* A trace of oil on the water. The channel split in the SVG filter supplies
+   the fringing; this adds the slow cyan/magenta/gold drift that reads as
+   petrol rather than as a rainbow. Kept under 10% alpha — at full strength it
+   stops looking like a sheen and starts looking like a gradient. */
+.field-water span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(0, 190, 255, 0.05) 0%,
+    rgba(170, 80, 255, 0.045) 24%,
+    rgba(255, 180, 60, 0.04) 46%,
+    rgba(40, 255, 190, 0.045) 68%,
+    rgba(120, 110, 255, 0.05) 100%
+  );
+  background-size: 280% 280%;
+  mix-blend-mode: overlay;
+  animation: petrol-drift 19s ease-in-out infinite alternate;
+}
+
+.field-water span:nth-child(2)::after {
+  animation-delay: -7s;
+}
+
+.field-water span:nth-child(3)::after {
+  animation-delay: -12s;
+}
+
+.field-water span:nth-child(4)::after {
+  animation-delay: -4s;
+}
+
+@keyframes petrol-drift {
+  from {
+    background-position: 0% 40%;
+  }
+  to {
+    background-position: 100% 60%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-water span::after {
+    animation: none;
+  }
+}
+
+.field-water span:nth-child(1),
+.field-water span:nth-child(2) {
+  top: -5%;
+  bottom: -5%;
+  width: 11vw;
+}
+
+.field-water span:nth-child(1) {
+  left: 0;
+  transform-origin: left center;
+  mask-image: linear-gradient(to right, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+}
+
+.field-water span:nth-child(2) {
+  right: 0;
+  transform-origin: right center;
+  animation-delay: -4.5s;
+  mask-image: linear-gradient(to left, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+}
+
+.field-water span:nth-child(3),
+.field-water span:nth-child(4) {
+  left: -5%;
+  right: -5%;
+  height: 13vh;
+  animation-name: water-drift-y;
+  /* Noise stretched the other way, so the top and bottom edges ripple along
+     their own axis instead of copying the side strips. */
+  backdrop-filter: url("#water-b");
+  -webkit-backdrop-filter: url("#water-b");
+}
+
+.field-water span:nth-child(3) {
+  top: 0;
+  transform-origin: center top;
+  animation-delay: -2.2s;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+}
+
+.field-water span:nth-child(4) {
+  bottom: 0;
+  transform-origin: center bottom;
+  animation-delay: -6.6s;
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+}
+
+/* A slow swell, so the edges breathe instead of sitting as a static blur.
+   Scale only, anchored to the outer edge (see transform-origin per strip):
+   the earlier version also translated inward, which walked the strip off the
+   viewport edge and left a bare unfiltered sliver down the side. */
+@keyframes water-drift {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(1.12);
+  }
+}
+
+@keyframes water-drift-y {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-water span {
+    animation: none;
+  }
+}
+
+/* ---------- Rising-letter text reveal ---------- */
+
+.reveal-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.reveal-char {
+  display: inline-block;
+  overflow: hidden;
+  /* Descenders would otherwise be sheared off by the mask. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.reveal-char__inner {
+  display: inline-block;
+  will-change: transform;
+}
+
 /* ---------- WebGL ripple overlay ---------- */
 
 .ripple-canvas {
@@ -574,7 +921,9 @@ button {
 }
 
 .cursor-dot__inner {
-  display: block;
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -608,6 +957,57 @@ button {
   transform: none;
 }
 
+/* A torn-off fragment of the artwork, carried under the cursor on the work
+   popup. The organic border-radius gives the mass; the SVG filter chews the
+   edge so it breaks like stone instead of reading as a tidy CSS blob. */
+.cursor-dot__blob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(170px, 19vw, 290px);
+  aspect-ratio: 1 / 0.94;
+  background-position: center;
+  background-size: cover;
+  border-radius: 47% 53% 37% 63% / 56% 41% 59% 44%;
+  filter: url("#cursor-torn");
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.cursor-dot--blob .cursor-dot__blob {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: cursor-blob-turn 42s linear infinite;
+}
+
+/* The label has to clear the fragment's own filter, or it would be displaced
+   along with the stone and stop being readable. */
+.cursor-dot--blob .cursor-dot__label {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes cursor-blob-turn {
+  from {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-dot--blob .cursor-dot__blob {
+    animation: none;
+  }
+}
+
 /* ---------- Work detail layout ---------- */
 
 #view-work {
@@ -617,21 +1017,15 @@ button {
   scroll-behavior: auto;
 }
 
-/* Exactly one viewport tall, in normal flow rather than fixed — the vh-based
-   offsets on .work-hero/.work-info below still resolve to the same pixel
-   positions as long as this is the first thing in #view-work (so its top
-   edge sits at the viewport top when scrollTop is 0), which is also what
-   design-canvas.js's workHeroRect() assumes. */
+/* Exactly one viewport tall — the popup's first screen, and the only region
+   that reads as "back to gallery" under the cursor. */
 .work-layout {
   position: relative;
   height: 100vh;
   cursor: none;
 }
 
-/* Positioned with a plain formula (not flex-centered as a block) so its
-   on-screen rect stays predictable — the reveal-transition target in
-   design-canvas.js's workHeroRect() mirrors these numbers exactly.
-   The third min() term caps height at 60vh (via the 610/896 ratio) so a
+/* The third min() term caps height at 60vh (via the 610/896 ratio) so a
    short/wide viewport can never stretch the hero into the info row. */
 .work-hero {
   position: absolute;
@@ -816,10 +1210,6 @@ button {
 
 /* ---------- Mobile gallery (replaces field + list below the breakpoint) ---------- */
 
-.mobile-gallery[hidden] {
-  display: none;
-}
-
 .mobile-gallery {
   position: fixed;
   inset: 0;
@@ -928,25 +1318,19 @@ button {
   z-index: 200;
   background: var(--color-bg);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6vw;
 }
 
-.preloader__scatter {
-  position: absolute;
-  inset: 0;
-}
-
-.preloader__item {
-  position: absolute;
-  transform: rotate(var(--r));
-  box-shadow: 0 16px 32px rgba(40, 40, 40, 0.18);
-  overflow: hidden;
-}
-
-.preloader__item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.preloader__headline {
+  max-width: 18ch;
+  font-size: clamp(30px, 5.4vw, 76px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  text-align: center;
 }
 
 .preloader__bar {

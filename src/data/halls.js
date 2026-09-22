@@ -103,6 +103,17 @@ export const halls = [
   },
 ];
 
+// Catalogue numbers run across the whole gallery, not per hall, so a work
+// carries the same number in the field as it does in the list.
+const numbers = new Map();
+halls.forEach((hall) => {
+  hall.works.forEach((work) => numbers.set(`${hall.id}/${work.id}`, numbers.size + 1));
+});
+
+export function workNumber(hallId, workId) {
+  return String(numbers.get(`${hallId}/${workId}`) ?? 0).padStart(2, "0");
+}
+
 export function findWork(hallId, workId) {
   const hall = halls.find((h) => h.id === hallId);
   const work = hall?.works.find((w) => w.id === workId);

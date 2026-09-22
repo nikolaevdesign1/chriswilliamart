@@ -13,7 +13,7 @@
   </head>
   <body>
     <div id="preloader" class="preloader">
-      <div class="preloader__scatter"></div>
+      <h1 class="preloader__headline"></h1>
       <div class="preloader__bar"><div class="preloader__bar-fill"></div></div>
       <p class="preloader__percent">0%</p>
     </div>
@@ -34,7 +34,7 @@
       <div id="view-field" class="field grid-texture">
         <div class="field-world"></div>
       </div>
-      <div id="view-work" class="grid-texture" data-cursor-label="back to gallery" hidden></div>
+      <div id="view-work" class="grid-texture" hidden></div>
       <div id="view-list" class="list-view" hidden>
         <div class="list-panel">
           <div class="list-panel__head">
@@ -58,13 +58,97 @@
       <div id="view-mobile" class="mobile-gallery" hidden></div>
     </main>
 
+    <!-- Real refraction for the field's edges: fractal noise drives a
+         displacement map, so the artwork behind actually bends as if seen
+         through moving water. The two filters churn at different rates so
+         opposite edges never ripple in lockstep. -->
+    <svg class="water-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="water-a" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.026" numOctaves="2" seed="4" result="noise">
+            <animate
+              attributeName="baseFrequency"
+              dur="17s"
+              values="0.011 0.026; 0.016 0.033; 0.009 0.022; 0.011 0.026"
+              repeatCount="indefinite"
+            />
+          </feTurbulence>
+
+          <!-- Split into channels and refract each by a different amount. Real
+               thin-film iridescence comes from wavelengths bending unequally,
+               so the colour fringes land exactly where the water bends hardest
+               instead of looking like a sticker laid on top. -->
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-r"
+            values="1 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 1 0" />
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-g"
+            values="0 0 0 0 0   0 1 0 0 0   0 0 0 0 0   0 0 0 1 0" />
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-b"
+            values="0 0 0 0 0   0 0 0 0 0   0 0 1 0 0   0 0 0 1 0" />
+
+          <feDisplacementMap in="ch-r" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" result="r-bent" />
+          <feDisplacementMap in="ch-g" in2="noise" scale="17" xChannelSelector="R" yChannelSelector="G" result="g-bent" />
+          <feDisplacementMap in="ch-b" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" result="b-bent" />
+
+          <!-- Screen over disjoint channels is plain addition: it puts the
+               image back together, now with the colours slightly out of register. -->
+          <feBlend in="r-bent" in2="g-bent" mode="screen" result="rg" />
+          <feBlend in="rg" in2="b-bent" mode="screen" result="bent" />
+          <feGaussianBlur in="bent" stdDeviation="1.6" />
+        </filter>
+
+        <filter id="water-b" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.024 0.010" numOctaves="2" seed="11" result="noise">
+            <animate
+              attributeName="baseFrequency"
+              dur="23s"
+              values="0.024 0.010; 0.031 0.015; 0.020 0.008; 0.024 0.010"
+              repeatCount="indefinite"
+            />
+          </feTurbulence>
+
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-r"
+            values="1 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 1 0" />
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-g"
+            values="0 0 0 0 0   0 1 0 0 0   0 0 0 0 0   0 0 0 1 0" />
+          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-b"
+            values="0 0 0 0 0   0 0 0 0 0   0 0 1 0 0   0 0 0 1 0" />
+
+          <feDisplacementMap in="ch-r" in2="noise" scale="19" xChannelSelector="R" yChannelSelector="G" result="r-bent" />
+          <feDisplacementMap in="ch-g" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" result="g-bent" />
+          <feDisplacementMap in="ch-b" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G" result="b-bent" />
+
+          <feBlend in="r-bent" in2="g-bent" mode="screen" result="rg" />
+          <feBlend in="rg" in2="b-bent" mode="screen" result="bent" />
+          <feGaussianBlur in="bent" stdDeviation="1.6" />
+        </filter>
+        <!-- Chews an irregular, torn edge out of the cursor fragment, so it
+             reads as a broken-off piece rather than a tidy CSS blob. -->
+        <filter id="cursor-torn" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="9" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="field-water" class="field-water" aria-hidden="true" hidden>
+      <span></span><span></span><span></span><span></span>
+    </div>
+
     <footer class="site-footer">
       <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>
       <div class="view-toggle">
         <a class="view-toggle__btn is-active" href="/" data-nav-field>Field</a>
         <a class="view-toggle__btn" href="/list" data-nav-list>List</a>
       </div>
-      <p class="site-footer__rights">all rights reserved 2026</p>
+      <div class="site-footer__end">
+        <button type="button" class="sound-toggle" data-sound-toggle aria-pressed="false" aria-label="Turn sound off">
+          <span class="sound-toggle__meter" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i>
+          </span>
+          <span class="sound-toggle__label">sound</span>
+        </button>
+        <p class="site-footer__rights">all rights reserved 2026</p>
+      </div>
     </footer>
 
     <script type="module" src="/src/app.js"></script>

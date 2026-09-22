@@ -1,8 +1,8 @@
 import gsap from "gsap";
 import { halls } from "../data/halls.js";
-import { showRipple, moveRipple, hideRipple, revealTransition } from "./ripple.js";
+import { showRipple, moveRipple, hideRipple } from "./ripple.js";
 import { navigate } from "./router.js";
-import { workHeroRect } from "./design-canvas.js";
+import { smoothScroll } from "./smooth-scroll.js";
 
 let root, rows, activeHallId;
 let preview, previewImg, previewMoveX, previewMoveY;
@@ -166,10 +166,8 @@ function showHall(hallId, focusWorkId) {
     tile.addEventListener("mouseleave", () => hideRipple(tile));
     tile.addEventListener("click", (event) => {
       event.preventDefault();
-      const target = workHeroRect();
-      revealTransition(tile, work.image, target, () => {
-        navigate("work", { hallId: hall.id, workId: work.id });
-      });
+      hideRipple(tile);
+      navigate("work", { hallId: hall.id, workId: work.id });
     });
 
     track.appendChild(tile);
@@ -214,6 +212,11 @@ export function initListPage(rootEl) {
   // catching the hover, so make sure the preview always dies once the
   // cursor leaves the whole rows list.
   root.querySelector(".list-panel__rows").addEventListener("mouseleave", hidePreview);
+
+  // Both panes glide to a stop on the same easing as the field camera, so the
+  // list doesn't feel like a different site from the gallery.
+  smoothScroll(root.querySelector(".list-panel"), { axis: "y" });
+  smoothScroll(root.querySelector(".list-showcase__strip"), { axis: "x", multiplier: 1.35 });
 
   const first = list[0];
   showHall(first.hall.id, first.work.id);

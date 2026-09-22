@@ -19,8 +19,8 @@ export function renderWork(root, hallId, workId) {
   root.scrollTop = 0;
 
   root.innerHTML = `
-    <div class="work-layout">
-      <figure class="work-hero">
+    <div class="work-layout" data-cursor-label="back to gallery" data-cursor-blob="${work.image}">
+      <figure class="work-hero" data-cursor-label="">
         <img src="${work.image}" alt="${work.title}" />
       </figure>
       <div class="work-info">

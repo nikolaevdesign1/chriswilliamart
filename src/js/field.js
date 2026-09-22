@@ -1,4 +1,4 @@
-import { halls } from "../data/halls.js";
+import { halls, workNumber } from "../data/halls.js";
 import { CELL_W, CELL_H, GRID_COLS, GRID_ROWS, WORLD_W, WORLD_H, layoutWorks, labelPosition } from "./field-layout.js";
 
 const SMOOTHING = 0.085;
@@ -70,12 +70,34 @@ function build() {
       tile.style.setProperty("--w", w);
       tile.style.setProperty("--h", h);
 
+      // Catalogue number above the picture, title and artist below it. The
+      // picture keeps its own clipped frame so neither line is cut off — and
+      // so the ripple plane, which tracks [data-ripple-frame], covers the
+      // artwork rather than the text.
+      const num = document.createElement("span");
+      num.className = "field-tile__num";
+      num.textContent = workNumber(hall.id, work.id);
+      tile.appendChild(num);
+
+      const frame = document.createElement("span");
+      frame.className = "field-tile__frame";
+      frame.dataset.rippleFrame = "";
+
       const img = document.createElement("img");
       img.src = work.image;
       img.alt = work.title;
       img.loading = "lazy";
       img.draggable = false;
-      tile.appendChild(img);
+      frame.appendChild(img);
+      tile.appendChild(frame);
+
+      const caption = document.createElement("span");
+      caption.className = "field-tile__caption";
+      caption.innerHTML = `
+        <span class="field-tile__title">${work.title}</span>
+        <span class="field-tile__artist">${hall.artist.name}</span>
+      `;
+      tile.appendChild(caption);
 
       tile.draggable = false;
       tile.addEventListener("dragstart", (event) => event.preventDefault());
