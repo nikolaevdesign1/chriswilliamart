@@ -10,6 +10,10 @@
 
 const DEFAULT_SMOOTHING = 0.085;
 
+// With reduced motion the wheel moves content straight to its target: same
+// distances, no glide.
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export function smoothScroll(el, { axis = "y", smoothing = DEFAULT_SMOOTHING, multiplier = 1 } = {}) {
