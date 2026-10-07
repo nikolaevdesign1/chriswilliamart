@@ -29,7 +29,7 @@ export function cookieConsent() {
 export function initCookieBanner({ delay = 1 } = {}) {
   if (readConsent()) return;
 
-  const banner = document.createElement("aside");
+  const banner = document.createElement("div");
   banner.className = "cookie-banner";
   banner.setAttribute("role", "dialog");
   banner.setAttribute("aria-label", "Cookie consent");
