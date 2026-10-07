@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
@@ -8,7 +8,23 @@ const root = import.meta.dirname;
 // sound and state carry across without a reload. For a direct visit to one
 // of those addresses on a plain static host, the built page is also written
 // out as <route>/index.html.
-const ROUTES = ["about", "contacts", "list"];
+const ROUTES = ["about", "contacts", "list", ...workRoutes()];
+
+// Every work gets its own folder too, so a shared link to a painting is a
+// real page (HTTP 200) and not the host's 404 fallback. Read straight from
+// the data file: it uses import.meta.glob, so it can't be imported here.
+function workRoutes() {
+  const source = readFileSync(resolve(import.meta.dirname, "src/data/halls.js"), "utf8");
+  const routes = [];
+  let hall = null;
+  for (const line of source.split("\n")) {
+    const hallMatch = line.match(/^ {4}id: "([^"]+)",/);
+    if (hallMatch) hall = hallMatch[1];
+    const workMatch = line.match(/work\("[^"]+", "([^"]+)"/);
+    if (workMatch && hall) routes.push(`work/${hall}/${workMatch[1]}`);
+  }
+  return routes;
+}
 
 // Deploy settings, passed in by CI (see .github/workflows/deploy.yml):
 // BASE_PATH is the sub-path the site is served from ("/repo/" on GitHub

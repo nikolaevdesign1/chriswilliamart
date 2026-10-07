@@ -18,7 +18,8 @@ function stripBase(pathname) {
 
 function parse(fullPath) {
   const path = stripBase(fullPath);
-  const workMatch = path.match(/^\/work\/([^/]+)\/([^/]+)$/);
+  // Optional trailing slash: static hosts redirect a folder to "folder/".
+  const workMatch = path.match(/^\/work\/([^/]+)\/([^/]+)\/?$/);
   if (workMatch) return { name: "work", params: { hallId: workMatch[1], workId: workMatch[2] } };
   // Trailing slash and .html spellings too: the build writes each route out
   // as its own folder so a static host can serve it on a direct visit.
