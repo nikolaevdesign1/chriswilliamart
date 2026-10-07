@@ -3,7 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chris Williams Art Gallery</title>
+    <title>Chris Williams Art Gallery | Paintings, one artist at a time</title>
+    <meta name="description" content="A single room in East London showing one painter at a time since 2009. Wander seven artists' work online, or visit us Wednesday to Sunday." />
+    <meta name="theme-color" content="#f4f5f5" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Link previews (messengers, social). og:image should be an absolute URL
+         once the site has a domain. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Chris Williams Art Gallery" />
+    <meta property="og:title" content="Chris Williams Art Gallery" />
+    <meta property="og:description" content="A single room in East London showing one painter at a time since 2009. Wander seven artists' work online, or visit us Wednesday to Sunday." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Chris Williams Art Gallery" />
+    <meta name="twitter:description" content="A single room in East London showing one painter at a time since 2009. Wander seven artists' work online, or visit us Wednesday to Sunday." />
+    <meta name="twitter:image" content="/og-image.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,23 +30,29 @@
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body class="grid-texture">
     <div id="preloader" class="preloader">
-      <h1 class="preloader__headline"></h1>
-      <div class="preloader__bar"><div class="preloader__bar-fill"></div></div>
-      <p class="preloader__percent">0%</p>
+      <p class="preloader__percent" aria-live="polite">0%</p>
     </div>
 
     <header class="site-header">
       <nav class="site-nav">
         <a class="site-nav__link is-active" href="/" data-nav-field>gallery area</a>
-        <a class="site-nav__link" href="/about.html">about</a>
-        <a class="site-nav__link" href="/contacts.html">contacts</a>
+        <a class="site-nav__link" href="/about" data-nav="about">about</a>
+        <a class="site-nav__link" href="/contacts" data-nav="contacts">contacts</a>
       </nav>
-      <p class="site-logo">
-        <span>Chris Williams</span>
-        <span>Art gallery</span>
-      </p>
+      <a class="site-logo" href="/" data-nav-field aria-label="Chris Williams Art Gallery, home">
+        <!-- CW: a half disc and two inverted triangles. -->
+        <svg class="site-logo__mark" viewBox="0 0 60 40" aria-hidden="true" focusable="false">
+          <path d="M20 0A20 20 0 0 0 20 40Z" />
+          <path d="M23 0H41.5L32.25 40Z" />
+          <path d="M41.5 0H60L50.75 40Z" />
+        </svg>
+        <span class="site-logo__name">
+          <span>Chris Williams</span>
+          <span>Art gallery</span>
+        </span>
+      </a>
     </header>
 
     <main>
@@ -47,92 +72,182 @@
 
         <div class="list-showcase">
           <div class="list-showcase__header">
-            <h2 class="list-showcase__name"></h2>
-            <p class="list-showcase__bio"></p>
+            <div class="list-showcase__who">
+              <h2 class="list-showcase__name"></h2>
+              <p class="list-showcase__meta"></p>
+            </div>
+            <div class="list-showcase__about">
+              <p class="list-showcase__bio"></p>
+              <dl class="artist-facts list-showcase__facts"></dl>
+            </div>
           </div>
-          <div class="list-showcase__strip">
+          <div class="list-showcase__strip" data-ripple-clip>
             <div class="list-showcase__track"></div>
           </div>
         </div>
       </div>
       <div id="view-mobile" class="mobile-gallery" hidden></div>
+      <div id="view-about" class="about" hidden>
+        <section class="about-intro">
+          <p class="about-intro__eyebrow">About the gallery</p>
+          <h1 class="about-intro__title">
+            A single room in East London that has shown one painter at a time since 2009.
+          </h1>
+          <dl class="about-intro__facts">
+            <div><dt>Founded</dt><dd>2009</dd></div>
+            <div><dt>Shows</dt><dd>54</dd></div>
+            <div><dt>Artists</dt><dd>7</dd></div>
+            <div><dt>Address</dt><dd>14 Marlow Yard, E2</dd></div>
+          </dl>
+        </section>
+
+        <h2 class="visually-hidden">History</h2>
+        <ol class="about-timeline">
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2009</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The back room</h3>
+              <p class="about-entry__text">Chris Williams was a picture framer on Marlow Yard when he talked the owner of the shop into lending him its back room for a month. The first show was eleven small oils by friends, hung on nails borrowed from the workshop. Forty people came. Three paintings sold, two of them to his mother.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2010</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">One artist at a time</h3>
+              <p class="about-entry__text">After a year of crowded evenings, Chris set the rule the gallery still keeps: one artist per show, no group exhibitions, and the walls repainted between every hang. That spring Jack Wolfstein turned up with canvases wrapped in bin bags, having carried them across London on the 55 bus.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2011</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Pompeii</h3>
+              <p class="about-entry__text">Wolfstein’s first solo show, Last Day of Pompeii, sold out in eight days. A short review in a local paper did more than anyone expected, and the framing shop’s owner, tired of the queue at his door, offered the whole ground floor.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2012</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The ground floor</h3>
+              <p class="about-entry__text">The renovation took four months and most of the savings. The concrete floor stayed as it was, stained with glue and paint. Lights were planned around the two north windows. The gallery opened Wednesday to Sunday so there would always be two quiet days to hang the next show.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2013</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Longer walls</h3>
+              <p class="about-entry__text">Mira Lindqvist arrived from Gothenburg with ceremonial scenes so crowded they needed more wall than the room had. For the first time the gallery built temporary walls, and visitors walked a corridor of processions and gatherings to reach the back.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2014</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The reading table</h3>
+              <p class="about-entry__text">Every show began to come with a printed sheet written by the artist, not by a curator. The sheets are free and sit in a wooden box by the door. Twelve years on, the archive of them is the closest thing the gallery has to a catalogue.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2015</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Restorations</h3>
+              <p class="about-entry__text">Tobias Kern showed oil paintings made over old archive photographs, part restorer and part forger. A museum in Rotterdam borrowed three of the works, the first time anything left Marlow Yard on loan rather than on sale.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2016</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The difficult year</h3>
+              <p class="about-entry__text">The rent doubled in a single letter. For a few weeks it looked as though the gallery would close. Instead, every artist it had shown gave one work to a sale on a Saturday in November. By Sunday evening it had covered two years of rent.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2017</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Upstairs</h3>
+              <p class="about-entry__text">With the lease secured for ten years, the empty first floor became a studio. Residencies run for three months, cost nothing, and come with one condition: at the end, show what you made, finished or not.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2018</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Ordinary places</h3>
+              <p class="about-entry__text">Amara Osei spent her residency collecting civic photographs from the borough’s archive and reassembling them into large, quiet compositions. People from the neighbourhood came in looking for their own streets, and often found them.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2019</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The back wall</h3>
+              <p class="about-entry__text">River Cole painted straight onto the gallery’s rear wall. When the show closed the wall was painted over, as agreed from the start. Photographs are the only record. On the last day the queue reached the end of the yard.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2020</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Postcards</h3>
+              <p class="about-entry__text">The gallery was closed for five months. Instead of an online viewing room it sent postcards: every week, one printed work mailed to anyone who asked for it. By the autumn the list had four thousand addresses.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2021</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Slower</h3>
+              <p class="about-entry__text">Ines Calder, a botanist before she was a painter, brought the patience of the specimen table with her. Her show changed the calendar: exhibitions now run for ten weeks instead of six, so a painting can be visited more than once.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2022</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The studio as subject</h3>
+              <p class="about-entry__text">Sam Ferreira showed no finished canvases at all, only tools, rags and residue from two years of work. It was the most argued-about show in the gallery’s history, and the most visited.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2024</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">The field</h3>
+              <p class="about-entry__text">The gallery went online the way it works offline. There is no search bar and no filters, only a field of works you wander through, the way you would wander through the room. Every piece is still hung by hand, one artist at a time.</p>
+            </div>
+          </li>
+          <li class="about-entry" data-about-entry>
+            <p class="about-entry__year">2026</p>
+            <div class="about-entry__body">
+              <h3 class="about-entry__title">Today</h3>
+              <p class="about-entry__text">Seven artists, one studio upstairs and the same concrete floor. The reading table is still by the door. The walls are still repainted between shows. The next one is being hung on a Monday.</p>
+            </div>
+          </li>
+        </ol>
+
+        <section class="about-outro">
+          <p class="about-outro__text">The room is open Wednesday to Sunday. The field is open always.</p>
+          <a class="about-outro__link" href="/" data-nav-field>Walk the collection</a>
+        </section>
+      </div>
+      <div id="view-contacts" class="contacts" hidden>
+        <a class="contacts__label" href="mailto:hello@chriswilliams.gallery">contact us</a>
+
+        <div class="contacts-info">
+          <address class="contacts-info__col">
+            <span>14 Marlow Yard</span>
+            <span>London E2 7DG</span>
+          </address>
+          <p class="contacts-info__col">
+            <span>Wednesday to Sunday</span>
+            <span>11:00 to 19:00</span>
+          </p>
+          <p class="contacts-info__col">
+            <span>Visits, sales, press</span>
+            <a href="mailto:hello@chriswilliams.gallery">hello@chriswilliams.gallery</a>
+          </p>
+          <p class="contacts-info__col contacts-info__col--end">
+            <span>Telephone</span>
+            <a href="tel:+442079460318">+44 20 7946 0318</a>
+          </p>
+        </div>
+      </div>
     </main>
 
-    <!-- Real refraction for the field's edges: fractal noise drives a
-         displacement map, so the artwork behind actually bends as if seen
-         through moving water. The two filters churn at different rates so
-         opposite edges never ripple in lockstep. -->
-    <svg class="water-defs" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="water-a" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.026" numOctaves="2" seed="4" result="noise">
-            <animate
-              attributeName="baseFrequency"
-              dur="17s"
-              values="0.011 0.026; 0.016 0.033; 0.009 0.022; 0.011 0.026"
-              repeatCount="indefinite"
-            />
-          </feTurbulence>
-
-          <!-- Split into channels and refract each by a different amount. Real
-               thin-film iridescence comes from wavelengths bending unequally,
-               so the colour fringes land exactly where the water bends hardest
-               instead of looking like a sticker laid on top. -->
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-r"
-            values="1 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 1 0" />
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-g"
-            values="0 0 0 0 0   0 1 0 0 0   0 0 0 0 0   0 0 0 1 0" />
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-b"
-            values="0 0 0 0 0   0 0 0 0 0   0 0 1 0 0   0 0 0 1 0" />
-
-          <feDisplacementMap in="ch-r" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" result="r-bent" />
-          <feDisplacementMap in="ch-g" in2="noise" scale="17" xChannelSelector="R" yChannelSelector="G" result="g-bent" />
-          <feDisplacementMap in="ch-b" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" result="b-bent" />
-
-          <!-- Screen over disjoint channels is plain addition: it puts the
-               image back together, now with the colours slightly out of register. -->
-          <feBlend in="r-bent" in2="g-bent" mode="screen" result="rg" />
-          <feBlend in="rg" in2="b-bent" mode="screen" result="bent" />
-          <feGaussianBlur in="bent" stdDeviation="1.6" />
-        </filter>
-
-        <filter id="water-b" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.024 0.010" numOctaves="2" seed="11" result="noise">
-            <animate
-              attributeName="baseFrequency"
-              dur="23s"
-              values="0.024 0.010; 0.031 0.015; 0.020 0.008; 0.024 0.010"
-              repeatCount="indefinite"
-            />
-          </feTurbulence>
-
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-r"
-            values="1 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 1 0" />
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-g"
-            values="0 0 0 0 0   0 1 0 0 0   0 0 0 0 0   0 0 0 1 0" />
-          <feColorMatrix in="SourceGraphic" type="matrix" result="ch-b"
-            values="0 0 0 0 0   0 0 0 0 0   0 0 1 0 0   0 0 0 1 0" />
-
-          <feDisplacementMap in="ch-r" in2="noise" scale="19" xChannelSelector="R" yChannelSelector="G" result="r-bent" />
-          <feDisplacementMap in="ch-g" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" result="g-bent" />
-          <feDisplacementMap in="ch-b" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G" result="b-bent" />
-
-          <feBlend in="r-bent" in2="g-bent" mode="screen" result="rg" />
-          <feBlend in="rg" in2="b-bent" mode="screen" result="bent" />
-          <feGaussianBlur in="bent" stdDeviation="1.6" />
-        </filter>
-        <!-- Chews an irregular, torn edge out of the cursor fragment, so it
-             reads as a broken-off piece rather than a tidy CSS blob. -->
-        <filter id="cursor-torn" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="9" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </defs>
-    </svg>
-
-    <div id="field-water" class="field-water" aria-hidden="true" hidden>
-      <span></span><span></span><span></span><span></span>
-    </div>
+    <!-- Glass-lens bands along every edge of the field; built by js/lens.js. -->
+    <div id="field-water" class="field-lens" aria-hidden="true" hidden></div>
 
     <footer class="site-footer">
       <p class="site-footer__credit">created by <a href="https://nklvdsgn.com">nklvdsgn.com</a></p>

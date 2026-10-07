@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The CW mark reversed out of a solid square: a picture in its frame. -->
+  <rect width="64" height="64" fill="#282828"/>
+  <g transform="translate(9.5 17) scale(0.75)" fill="#f4f5f5">
+    <path d="M20 0A20 20 0 0 0 20 40Z"/>
+    <path d="M23 0H41.5L32.25 40Z"/>
+    <path d="M41.5 0H60L50.75 40Z"/>
+  </g>
+</svg>

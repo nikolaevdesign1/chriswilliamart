@@ -3,8 +3,14 @@
 // rather than a mostly-empty crop of an oversized cell.
 export const CELL_W = 1680;
 export const CELL_H = 1300;
-export const GRID_COLS = 3;
-export const GRID_ROWS = 3;
+// One hall per artist, laid out as a single row that the field repeats in
+// every direction. Each repeat above is shifted ROW_SHIFT halls sideways, so
+// with seven halls every one of a hall's eight neighbours is a different
+// artist. A plain 3×3 wrap can't do that: on a 3×3 torus every cell borders
+// every other, so the two halls it had to repeat always landed next door.
+export const GRID_COLS = 7;
+export const GRID_ROWS = 1;
+export const ROW_SHIFT = 3;
 export const WORLD_W = CELL_W * GRID_COLS;
 export const WORLD_H = CELL_H * GRID_ROWS;
 
@@ -12,10 +18,10 @@ const MARGIN = 80;
 // Keeps tiles clear of the artist name/bio, which always renders at (80, 60).
 const LABEL_ZONE = { x: 0, y: 0, w: 620, h: 220 };
 const GAP = 140;
-const MIN_W = 260;
-const MAX_W = 460;
-const MIN_RATIO = 0.7;
-const MAX_RATIO = 1.5;
+// Bounds for a tile's long side. The short side follows from the work's own
+// proportions, so the tile is the painting's true shape at a random size.
+const MIN_LONG = 260;
+const MAX_LONG = 460;
 const SLOT_COUNT = 6;
 const RANDOM_ATTEMPTS = 120;
 const GRID_STEP = 30;
@@ -66,8 +72,8 @@ function isFree(candidate, placed) {
 }
 
 // Finds a spot for one tile: random sampling first (cheap, and what gives
-// the layout its organic feel), then — if a tight cell makes every random
-// guess collide — an exhaustive grid scan so we always find a genuinely
+// the layout its organic feel), then, if a tight cell makes every random
+// guess collide, an exhaustive grid scan so we always find a genuinely
 // free spot instead of ever reusing the same fallback coordinate for two
 // tiles (which used to stack them exactly on top of each other).
 function findSpot(w, h, placed, rng, areaW, areaH) {
@@ -100,7 +106,7 @@ function findSpot(w, h, placed, rng, areaW, areaH) {
 }
 
 // Scatters works at random (but seeded) positions/sizes instead of a strict
-// grid — gives the field an organic, non-uniform feel while guaranteeing no
+// grid, gives the field an organic, non-uniform feel while guaranteeing no
 // visual overlap between tiles or with the artist label.
 export function layoutWorks(works, hallId) {
   const rng = mulberry32(hashSeed(hallId || "hall"));
@@ -108,21 +114,26 @@ export function layoutWorks(works, hallId) {
   const areaH = CELL_H - MARGIN * 2;
   const placed = [];
 
-  for (let i = 0; i < SLOT_COUNT; i++) {
-    let w = MIN_W + rng() * (MAX_W - MIN_W);
-    let h = w * (MIN_RATIO + rng() * (MAX_RATIO - MIN_RATIO));
+  // Never more tiles than the hall has works, so nothing repeats in a room.
+  for (let i = 0; i < Math.min(SLOT_COUNT, works.length); i++) {
+    const work = works[i];
+    const aspect = work.aspect || 0.75;
+    let long = MIN_LONG + rng() * (MAX_LONG - MIN_LONG);
+    let w = aspect >= 1 ? long : long * aspect;
+    let h = aspect >= 1 ? long / aspect : long;
 
     let rect = findSpot(w, h, placed, rng, areaW, areaH);
-    // The cell is genuinely packed — shrink the tile a bit and retry rather
+    // The cell is genuinely packed, shrink the tile a bit and retry rather
     // than ever falling back to a fixed, potentially colliding coordinate.
-    while (!rect && w > MIN_W * 0.5) {
+    while (!rect && long > MIN_LONG * 0.5) {
+      long *= 0.85;
       w *= 0.85;
       h *= 0.85;
       rect = findSpot(w, h, placed, rng, areaW, areaH);
     }
     if (!rect) continue;
 
-    placed.push({ work: works[i % works.length], ...rect });
+    placed.push({ work, ...rect });
   }
 
   return placed;

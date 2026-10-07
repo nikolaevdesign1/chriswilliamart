@@ -10,25 +10,6 @@ export function initWallIntro() {
   });
 }
 
-export function initStageIntro() {
-  gsap.from(".site-header > *, .site-footer > *", {
-    opacity: 0,
-    y: -12,
-    duration: 0.6,
-    stagger: 0.05,
-    ease: "power2.out",
-  });
-
-  gsap.from(".abs, .tile", {
-    opacity: 0,
-    y: 16,
-    duration: 0.6,
-    stagger: 0.05,
-    delay: 0.1,
-    ease: "power3.out",
-  });
-}
-
 export function initScatterIntro() {
   gsap.from(".welcome-copy", {
     opacity: 0,

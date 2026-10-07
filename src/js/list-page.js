@@ -1,8 +1,8 @@
 import gsap from "gsap";
-import { halls } from "../data/halls.js";
+import { halls, artistLine, artistFacts } from "../data/halls.js";
 import { showRipple, moveRipple, hideRipple } from "./ripple.js";
-import { navigate } from "./router.js";
-import { smoothScroll } from "./smooth-scroll.js";
+import { navigate, url } from "./router.js";
+import { smoothScroll, stepScroll } from "./smooth-scroll.js";
 
 let root, rows, activeHallId;
 let preview, previewImg, previewMoveX, previewMoveY;
@@ -32,7 +32,7 @@ function renderRows(list) {
 }
 
 // A small preview of the hovered work that follows the cursor, independent
-// of which hall is showing in the right-hand showcase — restores the
+// of which hall is showing in the right-hand showcase, restores the
 // floating position:absolute preview from the earlier design.
 function ensurePreview() {
   if (preview) return;
@@ -50,7 +50,8 @@ function ensurePreview() {
 
 function showPreview(work, event) {
   ensurePreview();
-  previewImg.src = work.image;
+  previewImg.src = work.thumb;
+  preview.style.setProperty("--aspect", work.aspect);
   previewMoveX(event.clientX);
   previewMoveY(event.clientY - 24);
   gsap.to(preview, { opacity: 1, duration: 0.25, ease: "power2.out" });
@@ -67,7 +68,7 @@ function hidePreview() {
   gsap.to(preview, { opacity: 0, duration: 0.2, ease: "power2.out" });
 }
 
-// Instant, non-animated hide — used when the list is being torn down
+// Instant, non-animated hide, used when the list is being torn down
 // entirely (route change), so the floating preview can never survive past
 // it even if a mouseleave was missed on the way out.
 function killPreview() {
@@ -77,7 +78,7 @@ function killPreview() {
 }
 
 // Full-image lightbox opened by clicking a row (clicking the author name
-// switches the showcase instead — see initListPage).
+// switches the showcase instead, see initListPage).
 function ensureLightbox() {
   if (lightbox) return;
   lightbox = document.createElement("div");
@@ -106,7 +107,7 @@ function openLightbox(work, hall) {
   hidePreview();
   lightboxImg.src = work.image;
   lightboxImg.alt = work.title;
-  lightboxCaption.textContent = `${work.title} — ${hall.artist.name}`;
+  lightboxCaption.textContent = `${work.title}, ${hall.artist.name}`;
   lightbox.classList.add("is-open");
   gsap.to(lightbox, { opacity: 1, duration: 0.35, ease: "power2.out" });
 }
@@ -144,24 +145,34 @@ function showHall(hallId, focusWorkId) {
   const bio = root.querySelector(".list-showcase__bio");
   name.textContent = hall.artist.name;
   bio.textContent = hall.artist.bio;
+  root.querySelector(".list-showcase__meta").textContent = `${artistLine(hall.artist)} · ${hall.artist.movement}`;
+  // A short fact sheet; the full one lives on each work's page.
+  root.querySelector(".list-showcase__facts").innerHTML = artistFacts(hall)
+    .filter(([label]) => ["Born", "Lives in", "With the gallery"].includes(label))
+    .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
+    .join("");
 
   const track = root.querySelector(".list-showcase__track");
   track.innerHTML = "";
   hall.works.forEach((work) => {
     const tile = document.createElement("a");
     tile.className = "list-tile";
-    tile.href = `/work/${hall.id}/${work.id}`;
+    tile.href = url(`/work/${hall.id}/${work.id}`);
     tile.classList.toggle("is-focused", work.id === focusWorkId);
+    // The strip is a fixed height, so the painting's own proportions decide
+    // each tile's width, nothing gets cropped to a generic 3:4.
+    tile.style.aspectRatio = work.aspect;
     tile.draggable = false;
     tile.addEventListener("dragstart", (event) => event.preventDefault());
 
     const img = document.createElement("img");
-    img.src = work.image;
+    img.src = work.thumb;
     img.alt = work.title;
+    img.decoding = "async";
     img.draggable = false;
     tile.appendChild(img);
 
-    tile.addEventListener("mouseenter", () => showRipple(tile, work.image));
+    tile.addEventListener("mouseenter", () => showRipple(tile, work.thumb));
     tile.addEventListener("mousemove", (event) => moveRipple(tile, event));
     tile.addEventListener("mouseleave", () => hideRipple(tile));
     tile.addEventListener("click", (event) => {
@@ -216,7 +227,7 @@ export function initListPage(rootEl) {
   // Both panes glide to a stop on the same easing as the field camera, so the
   // list doesn't feel like a different site from the gallery.
   smoothScroll(root.querySelector(".list-panel"), { axis: "y" });
-  smoothScroll(root.querySelector(".list-showcase__strip"), { axis: "x", multiplier: 1.35 });
+  stepScroll(root.querySelector(".list-showcase__strip"), { itemSelector: ".list-tile" });
 
   const first = list[0];
   showHall(first.hall.id, first.work.id);

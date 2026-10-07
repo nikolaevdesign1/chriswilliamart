@@ -1,25 +1,26 @@
-// Procedurally synthesised audio — no asset files. The ambient bed and every
+// Procedurally synthesised audio, no asset files. The ambient bed and every
 // interaction sound are built from oscillators and noise, so the whole
 // soundtrack costs a few hundred bytes of JS instead of megabytes of MP3.
 
 const STORAGE_KEY = "cw-sound-muted";
 
-// Two open voicings — fifths and ninths, no thirds — that the pad drifts
+// Two open voicings, fifths and ninths, no thirds, that the pad drifts
 // between. Deliberately unresolved, so it reads as room tone rather than as
-// music you start following.
+// music you start following. Pitched an octave and more above the old bed:
+// the low drone read as heavy; up here it sits as light air in the room.
 const VOICINGS = [
-  [73.42, 110.0, 164.81, 246.94],
-  [65.41, 98.0, 146.83, 220.0],
+  [220.0, 329.63, 493.88, 659.25],
+  [196.0, 293.66, 440.0, 587.33],
 ];
 
 const VOICE_SHAPE = [
-  { type: "sine", gain: 0.55, lfo: 0.037 },
-  { type: "sine", gain: 0.38, lfo: 0.051 },
-  { type: "triangle", gain: 0.13, lfo: 0.029 },
-  { type: "sine", gain: 0.07, lfo: 0.043 },
+  { type: "sine", gain: 0.42, lfo: 0.037 },
+  { type: "sine", gain: 0.3, lfo: 0.051 },
+  { type: "sine", gain: 0.16, lfo: 0.029 },
+  { type: "sine", gain: 0.08, lfo: 0.043 },
 ];
 
-const PAD_LEVEL = 0.16;
+const PAD_LEVEL = 0.09;
 const CHORD_HOLD = 26;
 const CHORD_GLIDE = 9;
 
@@ -32,9 +33,13 @@ let started = false;
 let muted = false;
 let toggleEl = null;
 
+// Sound is on by default on every visit. Muting only lasts for the current
+// tab: it used to live in localStorage, so a single click on the toggle kept
+// the site silent on every later visit too.
 function readMuted() {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
+    localStorage.removeItem(STORAGE_KEY); // drop the old, permanent setting
+    return sessionStorage.getItem(STORAGE_KEY) === "1";
   } catch {
     return false;
   }
@@ -42,9 +47,9 @@ function readMuted() {
 
 function writeMuted(value) {
   try {
-    localStorage.setItem(STORAGE_KEY, value ? "1" : "0");
+    sessionStorage.setItem(STORAGE_KEY, value ? "1" : "0");
   } catch {
-    /* private mode — the preference just won't persist */
+    /* private mode, the preference just won't persist */
   }
 }
 
@@ -76,8 +81,8 @@ function buildPad() {
 
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 520;
-  filter.Q.value = 0.4;
+  filter.frequency.value = 1500;
+  filter.Q.value = 0.3;
   filter.connect(padBus);
 
   VOICE_SHAPE.forEach((shape, i) => {
@@ -107,20 +112,21 @@ function buildPad() {
     oscillators.push(osc);
   });
 
-  // A barely-there layer of filtered noise — the "air" of a large room. It
+  // A barely-there layer of filtered noise, the "air" of a large room. It
   // keeps the pad from sounding like four bare oscillators.
   const air = ctx.createBufferSource();
   air.buffer = noiseBuffer(3);
   air.loop = true;
   const airFilter = ctx.createBiquadFilter();
-  airFilter.type = "lowpass";
-  airFilter.frequency.value = 380;
+  airFilter.type = "bandpass";
+  airFilter.frequency.value = 2400;
+  airFilter.Q.value = 0.5;
   const airGain = ctx.createGain();
-  airGain.gain.value = 0.05;
+  airGain.gain.value = 0.035;
   const airLfo = ctx.createOscillator();
   airLfo.frequency.value = 0.021;
   const airLfoDepth = ctx.createGain();
-  airLfoDepth.gain.value = 0.03;
+  airLfoDepth.gain.value = 0.02;
   airLfo.connect(airLfoDepth);
   airLfoDepth.connect(airGain.gain);
   air.connect(airFilter);
@@ -172,121 +178,120 @@ function envelope(peak, attack, release) {
 // the same sample fired twice.
 const jitter = (freq, amount = 0.04) => freq * (1 + (Math.random() - 0.5) * 2 * amount);
 
-/** Main interaction sound: a warm wooden tick with a fast downward bend. */
+/** Main interaction sound: a soft, short tap, felt more than heard. */
 export function playClick() {
   if (!canPlay()) return;
-  const { gain, now, end } = envelope(0.13, 0.004, 0.19);
-
-  const body = ctx.createOscillator();
-  body.type = "triangle";
-  const f0 = jitter(430);
-  body.frequency.setValueAtTime(f0, now);
-  body.frequency.exponentialRampToValueAtTime(f0 * 0.42, now + 0.13);
-
-  const ring = ctx.createOscillator();
-  ring.type = "sine";
-  ring.frequency.setValueAtTime(f0 * 2.02, now);
-  const ringGain = ctx.createGain();
-  ringGain.gain.value = 0.3;
-  ring.connect(ringGain);
-  ringGain.connect(gain);
-
-  // A short noise transient gives the attack a physical edge.
-  const tap = ctx.createBufferSource();
-  tap.buffer = noiseBuffer(0.05);
-  const tapFilter = ctx.createBiquadFilter();
-  tapFilter.type = "bandpass";
-  tapFilter.frequency.value = 1900;
-  const tapGain = ctx.createGain();
-  tapGain.gain.setValueAtTime(0.5, now);
-  tapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
-  tap.connect(tapFilter);
-  tapFilter.connect(tapGain);
-  tapGain.connect(gain);
-
-  body.connect(gain);
-  body.start(now);
-  ring.start(now);
-  tap.start(now);
-  body.stop(end);
-  ring.stop(end);
-}
-
-/** Hover tick — quieter and higher, meant to sit under the click. */
-export function playHover() {
-  if (!canPlay()) return;
-  const { gain, now, end } = envelope(0.022, 0.003, 0.06);
+  const { gain, now, end } = envelope(0.16, 0.003, 0.1);
   const osc = ctx.createOscillator();
   osc.type = "sine";
-  osc.frequency.setValueAtTime(jitter(2100, 0.06), now);
+  const f0 = jitter(1150);
+  osc.frequency.setValueAtTime(f0, now);
+  osc.frequency.exponentialRampToValueAtTime(f0 * 0.62, now + 0.07);
   osc.connect(gain);
   osc.start(now);
   osc.stop(end);
 }
 
-/** Opening a work: a soft upward swell. */
-export function playOpen() {
+/** Hover tick, a faint glint that sits well under the click. */
+export function playHover() {
   if (!canPlay()) return;
-  const { gain, now, end } = envelope(0.07, 0.05, 0.42);
-  [1, 1.5].forEach((mult, i) => {
+  const { gain, now, end } = envelope(0.04, 0.002, 0.04);
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(jitter(2600, 0.06), now);
+  osc.connect(gain);
+  osc.start(now);
+  osc.stop(end);
+}
+
+// A small bell: two sines a fifth apart with a slow tail.
+function chime(freqs, peak, release) {
+  const { gain, now, end } = envelope(peak, 0.012, release);
+  freqs.forEach((freq, i) => {
     const osc = ctx.createOscillator();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(300 * mult, now);
-    osc.frequency.exponentialRampToValueAtTime(620 * mult, now + 0.34);
+    osc.frequency.setValueAtTime(freq, now + i * 0.06);
     const g = ctx.createGain();
-    g.gain.value = i === 0 ? 1 : 0.35;
+    g.gain.value = i === 0 ? 1 : 0.5;
     osc.connect(g);
     g.connect(gain);
-    osc.start(now);
+    osc.start(now + i * 0.06);
     osc.stop(end);
   });
 }
 
-/** Going back: the swell inverted. */
+/** Opening a work: a soft rising two-note chime. */
+export function playOpen() {
+  if (!canPlay()) return;
+  chime([659.25, 987.77], 0.11, 0.9);
+}
+
+/** Going back: the same chime, falling. */
 export function playClose() {
   if (!canPlay()) return;
-  const { gain, now, end } = envelope(0.06, 0.03, 0.34);
-  const osc = ctx.createOscillator();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(600, now);
-  osc.frequency.exponentialRampToValueAtTime(280, now + 0.3);
-  osc.connect(gain);
-  osc.start(now);
-  osc.stop(end);
+  chime([987.77, 659.25], 0.09, 0.7);
 }
 
 function syncToggle() {
   if (!toggleEl) return;
   toggleEl.classList.toggle("is-muted", muted);
+  // Sound is on but the browser hasn't let it start yet: the meter must not
+  // claim audio is playing while the room is silent.
+  toggleEl.classList.toggle("is-waiting", !muted && (!ctx || ctx.state !== "running"));
   toggleEl.setAttribute("aria-pressed", muted ? "true" : "false");
   toggleEl.setAttribute("aria-label", muted ? "Turn sound on" : "Turn sound off");
 }
+
+let suspendTimer = null;
 
 function setMuted(next) {
   muted = next;
   writeMuted(muted);
   syncToggle();
+  clearTimeout(suspendTimer);
   if (muted) {
-    fadePad(0, 0.6);
+    fadePad(0, 0.4);
+    // After the fade, stop the audio engine outright. A gain of zero should
+    // already be silent, but suspending guarantees nothing at all keeps
+    // playing, the pad, its air layer, a click still ringing out.
+    suspendTimer = setTimeout(() => {
+      if (muted && ctx && ctx.state === "running") ctx.suspend();
+    }, 450);
   } else {
-    ensureContext();
+    ensureContext(); // resumes a suspended context
     buildPad();
     fadePad(PAD_LEVEL, 2.2);
   }
 }
 
-// Browsers refuse to start audio before a real gesture, so the pad waits for
-// the first interaction rather than trying (and failing) on load.
-function startOnFirstGesture() {
-  if (started) return;
-  started = true;
-  if (muted) return;
-  ensureContext();
-  buildPad();
-  fadePad(PAD_LEVEL, 3);
+// Sound starts at once wherever the browser allows it. Most block audio
+// until the visitor's first real gesture (click, tap, key), scrolling and
+// mouse movement don't count, so the pad is built and asked to play on load,
+// and every kind of gesture retries until it actually runs.
+const GESTURES = ["pointerdown", "mousedown", "touchstart", "touchend", "keydown", "click"];
+
+function tryStart() {
+  if (muted || !ctx) return;
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
 }
 
-const CLICKABLE = "a, button, .field-tile, .list-panel__row, .list-tile, .mobile-hall__tile";
+function startNow() {
+  if (muted) return;
+  if (!ensureContext()) return;
+  buildPad();
+  ctx.onstatechange = () => {
+    syncToggle();
+    if (ctx.state === "running" && !started && !muted) {
+      started = true;
+      fadePad(PAD_LEVEL, 3);
+      GESTURES.forEach((type) => window.removeEventListener(type, tryStart, true));
+    }
+  };
+  ctx.onstatechange();
+  GESTURES.forEach((type) => window.addEventListener(type, tryStart, true));
+}
+
+const CLICKABLE = "a, button, .field-tile, .list-panel__row, .list-tile, .m-work";
 
 export function initSound() {
   muted = readMuted();
@@ -296,13 +301,21 @@ export function initSound() {
   toggleEl?.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    started = true;
+    // "On" but still blocked by the browser: the visitor is pressing it to
+    // hear something, so this click starts the sound. Toggling here used to
+    // mute it at the very moment the browser finally allowed audio.
+    if (!muted && ctx?.state !== "running") {
+      startNow();
+      tryStart();
+      return;
+    }
     setMuted(!muted);
+    if (!muted) startNow();
   });
 
-  window.addEventListener("pointerdown", startOnFirstGesture, { once: true });
+  startNow();
 
-  // Delegated rather than wired per control. The sound toggle is excluded —
+  // Delegated rather than wired per control. The sound toggle is excluded , 
   // it has its own feedback: the meter starting or freezing.
   document.addEventListener("click", (event) => {
     if (event.target.closest("[data-sound-toggle]")) return;
@@ -312,7 +325,7 @@ export function initSound() {
   document.addEventListener("mouseover", (event) => {
     if (event.target.closest("[data-sound-toggle]")) return;
     const hit = event.target.closest(CLICKABLE);
-    // `mouseover` bubbles from children too — only sound the first entry into
+    // `mouseover` bubbles from children too, only sound the first entry into
     // a given control, not every internal element it passes over.
     if (hit && !hit.contains(event.relatedTarget)) playHover();
   });

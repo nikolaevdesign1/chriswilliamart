@@ -1,4 +1,4 @@
-// Plausible catalogue details for a work — not real records, generated
+// Plausible catalogue details for a work, not real records, generated
 // deterministically from the work's id so the same piece always shows the
 // same specs across reloads.
 function hashSeed(str) {
@@ -21,16 +21,7 @@ function mulberry32(seed) {
   };
 }
 
-const MEDIUMS = [
-  "Oil on canvas",
-  "Oil on linen",
-  "Acrylic on canvas",
-  "Mixed media on panel",
-  "Archival pigment print",
-  "Watercolor on paper",
-  "Oil on board",
-  "Charcoal and ink on paper",
-];
+const MEDIUMS = ["Oil on canvas", "Oil on linen", "Oil on oak panel", "Oil on board"];
 
 const NOTES = [
   "Held in a private collection for over a decade before entering this exhibition.",
@@ -44,18 +35,19 @@ const NOTES = [
 const pick = (rng, list) => list[Math.floor(rng() * list.length)];
 const range = (rng, min, max) => Math.round(min + rng() * (max - min));
 
+// Height is fixed per work; width follows from the image's own proportions
+// (see workDimensions), so the stated size, the picture and the room mockups
+// always agree.
 export function deriveSpecs(work) {
   const rng = mulberry32(hashSeed(work.id));
-  const medium = pick(rng, MEDIUMS);
-  const isPrint = medium === "Archival pigment print";
-
-  const h = range(rng, 60, 140);
-  const w = range(rng, 45, 110);
-
   return {
-    medium,
-    dimensions: `${h} × ${w} cm`,
-    edition: isPrint ? `Edition of ${range(rng, 3, 12)}` : "Unique work",
+    medium: pick(rng, MEDIUMS),
+    heightCm: range(rng, 40, 100),
+    edition: "Unique work",
     note: pick(rng, NOTES),
   };
+}
+
+export function workDimensions(heightCm, aspect) {
+  return `${heightCm} × ${Math.round(heightCm * aspect)} cm`;
 }

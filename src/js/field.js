@@ -1,5 +1,6 @@
-import { halls, workNumber } from "../data/halls.js";
-import { CELL_W, CELL_H, GRID_COLS, GRID_ROWS, WORLD_W, WORLD_H, layoutWorks, labelPosition } from "./field-layout.js";
+import { halls, workNumber, artistLine } from "../data/halls.js";
+import { url } from "./router.js";
+import { CELL_W, CELL_H, GRID_COLS, GRID_ROWS, ROW_SHIFT, WORLD_W, WORLD_H, layoutWorks, labelPosition } from "./field-layout.js";
 
 const SMOOTHING = 0.085;
 
@@ -18,15 +19,24 @@ let onTileHover = null;
 let onTileLeave = null;
 let onTileClick = null;
 let hoveredTile = null;
+// World positions are read once at build time. Parsing them back out of each
+// node's inline style every frame forced a style read per element per frame.
+let items = [];
+let lastCamera = { x: NaN, y: NaN };
 
 function wrap(value, size) {
   return ((value % size) + size) % size;
 }
 
+function track(node, x, y) {
+  items.push({ node, x, y, sx: NaN, sy: NaN });
+}
+
 function build() {
   world.innerHTML = "";
-  // Every grid cell gets a hall — with only 7 halls and 9 cells, the last
-  // two repeat rather than leaving the field with empty rooms.
+  items = [];
+  // One cell per hall (see GRID_COLS); the slanted wrap in nearestCopy()
+  // keeps any two copies of the same hall well apart.
   const cellCount = GRID_COLS * GRID_ROWS;
   for (let cellIndex = 0; cellIndex < cellCount; cellIndex++) {
     const hall = halls[cellIndex % halls.length];
@@ -40,12 +50,16 @@ function build() {
     heading.className = "field-label";
     heading.style.setProperty("--x", baseX + label.x);
     heading.style.setProperty("--y", baseY + label.y);
-    heading.innerHTML = `<p class="field-label__name">${hall.artist.name}</p><p class="field-label__bio">${hall.artist.bio}</p>`;
+    heading.innerHTML = `
+      <p class="field-label__name">${hall.artist.name}</p>
+      <p class="field-label__meta"><span>${artistLine(hall.artist)}</span><span>${hall.artist.movement}</span></p>
+      <p class="field-label__bio">${hall.artist.bio}</p>`;
     world.appendChild(heading);
+    track(heading, baseX + label.x, baseY + label.y);
 
     const works = layoutWorks(hall.works, hall.id);
 
-    // The very first cell's content sets where the camera starts — computed
+    // The very first cell's content sets where the camera starts, computed
     // from the actual placed tiles (their bounding-box centroid) rather than
     // a guessed ratio of the cell size, so the opening view is guaranteed to
     // land on real content regardless of cell size or scatter tuning.
@@ -62,7 +76,7 @@ function build() {
     works.forEach(({ work, x, y, w, h }) => {
       const tile = document.createElement("a");
       tile.className = "field-tile";
-      tile.href = `/work/${hall.id}/${work.id}`;
+      tile.href = url(`/work/${hall.id}/${work.id}`);
       tile.dataset.hallId = hall.id;
       tile.dataset.workId = work.id;
       tile.style.setProperty("--x", baseX + x);
@@ -71,7 +85,7 @@ function build() {
       tile.style.setProperty("--h", h);
 
       // Catalogue number above the picture, title and artist below it. The
-      // picture keeps its own clipped frame so neither line is cut off — and
+      // picture keeps its own clipped frame so neither line is cut off, and
       // so the ripple plane, which tracks [data-ripple-frame], covers the
       // artwork rather than the text.
       const num = document.createElement("span");
@@ -84,9 +98,9 @@ function build() {
       frame.dataset.rippleFrame = "";
 
       const img = document.createElement("img");
-      img.src = work.image;
+      img.src = work.thumb;
       img.alt = work.title;
-      img.loading = "lazy";
+      img.decoding = "async";
       img.draggable = false;
       frame.appendChild(img);
       tile.appendChild(frame);
@@ -120,6 +134,16 @@ function build() {
       });
 
       world.appendChild(tile);
+      track(tile, baseX + x, baseY + y);
+
+      // Keyboard: tabbing onto a tile that's off-screen glides the camera
+      // over to it, so the focused work is always the one in view.
+      tile.addEventListener("focus", () => {
+        const rect = tile.getBoundingClientRect();
+        const center = screenCenter();
+        target.x += rect.left + rect.width / 2 - center.x;
+        target.y += rect.top + rect.height / 2 - center.y;
+      });
     });
   }
 }
@@ -132,24 +156,49 @@ function tick() {
   camera.x += (target.x - camera.x) * SMOOTHING;
   camera.y += (target.y - camera.y) * SMOOTHING;
 
+  // Settled: the camera is within a hundredth of a pixel of where it was
+  // last frame, so nothing on screen would change. Skip the whole pass.
+  if (Math.abs(camera.x - lastCamera.x) < 0.01 && Math.abs(camera.y - lastCamera.y) < 0.01) {
+    rafId = requestAnimationFrame(tick);
+    return;
+  }
+  lastCamera = { ...camera };
+
   const center = screenCenter();
-  const nodes = world.children;
-  for (const node of nodes) {
-    const bx = parseFloat(node.style.getPropertyValue("--x"));
-    const by = parseFloat(node.style.getPropertyValue("--y"));
-    const dx = wrapCentered(bx - camera.x, WORLD_W);
-    const dy = wrapCentered(by - camera.y, WORLD_H);
+  for (const item of items) {
+    const { dx, dy } = nearestCopy(item.x - camera.x, item.y - camera.y);
     // --x/--y are each tile's top-left corner (per field-layout.js), not a
-    // center point, so the screen position is a direct offset — no w/h
+    // center point, so the screen position is a direct offset, no w/h
     // subtraction here, or every tile renders shifted up-left by half its
     // own size (label elements have no --w/--h, so they never had this
     // shift, which is what made them collide with tiles below them).
-    const screenX = center.x + dx;
-    const screenY = center.y + dy;
-    node.style.transform = `translate3d(${Math.round(screenX)}px, ${Math.round(screenY)}px, 0)`;
+    const screenX = Math.round(center.x + dx);
+    const screenY = Math.round(center.y + dy);
+    // Rounded to whole pixels, so during a slow glide most tiles land on the
+    // same pixel two frames running, and writing an identical transform
+    // still costs a style recalc.
+    if (screenX === item.sx && screenY === item.sy) continue;
+    item.sx = screenX;
+    item.sy = screenY;
+    item.node.style.transform = `translate3d(${screenX}px, ${screenY}px, 0)`;
   }
 
   rafId = requestAnimationFrame(tick);
+}
+
+// Every item repeats on a slanted lattice: a full row to the side, or one
+// row up and ROW_SHIFT halls across. Pick the copy closest to the camera,
+// measured in cells so both axes count alike.
+function nearestCopy(rx, ry) {
+  const k0 = Math.round(ry / WORLD_H);
+  let best = null;
+  for (let k = k0 - 1; k <= k0 + 1; k++) {
+    const dy = ry - k * WORLD_H;
+    const dx = wrapCentered(rx + k * ROW_SHIFT * CELL_W, WORLD_W);
+    const score = Math.max(Math.abs(dx) / CELL_W, Math.abs(dy) / CELL_H);
+    if (!best || score < best.score) best = { dx, dy, score };
+  }
+  return best;
 }
 
 function wrapCentered(value, size) {
@@ -157,7 +206,7 @@ function wrapCentered(value, size) {
 }
 
 function onPointerDown(event) {
-  // Stops the browser from starting a native image/link drag — without
+  // Stops the browser from starting a native image/link drag, without
   // this, holding down on a tile can pick it up as a drag-ghost instead of
   // panning the field.
   if (event.pointerType !== "touch") event.preventDefault();
@@ -241,6 +290,12 @@ export function initField(rootEl, handlers = {}) {
   root.addEventListener("pointerup", onPointerUp);
   root.addEventListener("pointercancel", onPointerUp);
   root.addEventListener("wheel", onWheel, { passive: false });
+  // Focusing a tile makes the browser scroll its clipped container to reveal
+  // it, which would shift the whole field. The camera does that job instead.
+  root.addEventListener("scroll", () => {
+    root.scrollTop = 0;
+    root.scrollLeft = 0;
+  });
 
   if (!rafId) tick();
 }
@@ -251,6 +306,10 @@ export function pauseField() {
 }
 
 export function resumeField() {
+  // The view was hidden, so a resize may have moved the screen center since
+  // the last pass, force one full placement.
+  lastCamera = { x: NaN, y: NaN };
+  items.forEach((item) => (item.sx = item.sy = NaN));
   if (!rafId) tick();
 }
 
