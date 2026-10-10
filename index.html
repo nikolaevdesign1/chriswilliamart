@@ -9,6 +9,17 @@
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- The first artist's cover is the largest thing on a phone's first
+         screen, but it is created by script; preloading it here lets the
+         browser fetch it alongside the JavaScript instead of after it. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/src/assets/thumbs/art/wolfstein-01.webp"
+      type="image/webp"
+      media="(max-width: 720px)"
+      fetchpriority="high"
+    />
 
     <!-- Link previews (messengers, social). og:image should be an absolute URL
          once the site has a domain. -->
