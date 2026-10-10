@@ -14,8 +14,8 @@ import { showRipple, moveRipple, hideRipple } from "./ripple.js";
 // floor meets the wall, where the wall's centre is, and how tall the
 // furniture under the picture stands. Coordinates are in the photo's own
 // pixels.
-const roomPhotos = import.meta.glob("../assets/img/rooms/*.jpg", { eager: true, import: "default" });
-const roomPhoto = (name) => roomPhotos[`../assets/img/rooms/${name}.jpg`];
+const roomPhotos = import.meta.glob("../assets/img/rooms/*.webp", { eager: true, import: "default" });
+const roomPhoto = (name) => roomPhotos[`../assets/img/rooms/${name}.webp`];
 
 const ROOMS = [
   {
@@ -109,7 +109,7 @@ export function renderWork(root, hallId, workId) {
   root.innerHTML = `
     <div class="work-layout" data-cursor-label="back to the gallery">
       <figure class="work-hero">
-        <img src="${work.image}" alt="${work.title}" />
+        <img src="${work.image}" alt="${work.title}" fetchpriority="high" data-critical />
       </figure>
     </div>
 

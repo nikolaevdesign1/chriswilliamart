@@ -1,7 +1,7 @@
 import "./styles/main.css";
 import gsap from "gsap";
-import { onRoute, navigate, start } from "./js/router.js";
-import { initField, pauseField, resumeField } from "./js/field.js";
+import { onRoute, navigate, start, url } from "./js/router.js";
+import { initField, pauseField, resumeField, loadFieldImages } from "./js/field.js";
 import { initRipple, showRipple, moveRipple, hideRipple } from "./js/ripple.js";
 import { renderWork } from "./js/work-view.js";
 import { initListPage, teardownListPage } from "./js/list-page.js";
@@ -14,7 +14,7 @@ import { initSound, playOpen, playClose } from "./js/sound.js";
 import { revealText, initTextHover } from "./js/type-reveal.js";
 import { smoothScroll } from "./js/smooth-scroll.js";
 import { initAbout, enterAbout } from "./js/about-view.js";
-import { findWork } from "./data/halls.js";
+import { findWork, halls } from "./data/halls.js";
 
 const fieldRoot = document.getElementById("view-field");
 const workRoot = document.getElementById("view-work");
@@ -22,7 +22,8 @@ const listRoot = document.getElementById("view-list");
 const mobileRoot = document.getElementById("view-mobile");
 const aboutRoot = document.getElementById("view-about");
 const contactsRoot = document.getElementById("view-contacts");
-const allViews = [fieldRoot, workRoot, listRoot, mobileRoot, aboutRoot, contactsRoot];
+const notFoundRoot = document.getElementById("view-notfound");
+const allViews = [fieldRoot, workRoot, listRoot, mobileRoot, aboutRoot, contactsRoot, notFoundRoot];
 
 const isMobile = () => window.matchMedia("(max-width: 720px)").matches;
 
@@ -32,9 +33,24 @@ initCursor();
 initSound();
 initTextHover();
 initRipple();
-initLens(waterRoot);
+// The lens is built the first time the field is shown: drawing its
+// displacement maps is the costliest thing at start-up on a phone, and a
+// phone never shows the field.
+let lensReady = false;
+function ensureLens() {
+  if (lensReady) return;
+  lensReady = true;
+  initLens(waterRoot);
+}
 // The work popup scrolls on the same inertia as everything else.
 smoothScroll(workRoot, { axis: "y" });
+// Once the work page scrolls past its first screen, the header and footer get
+// a solid backing so the story text doesn't run underneath them.
+workRoot.addEventListener(
+  "scroll",
+  () => document.body.classList.toggle("chrome-solid", workRoot.scrollTop > 24),
+  { passive: true }
+);
 initAbout(aboutRoot);
 initField(fieldRoot, {
   onHover: (tile, hall, work, event) => {
@@ -65,6 +81,7 @@ let currentRoute = null;
 
 function hideAllViews() {
   allViews.forEach((view) => (view.hidden = true));
+  document.body.classList.remove("chrome-solid");
   waterRoot.hidden = true;
   pauseField();
   // Leaving the list route entirely, kill any floating preview/lightbox
@@ -149,7 +166,9 @@ function renderField() {
   } else {
     fieldRoot.hidden = false;
     waterRoot.hidden = false;
+    ensureLens();
     resumeField();
+    loadFieldImages();
     enter(
       fieldRoot,
       (el) => fadeIn(el, fadeDuration),
@@ -190,7 +209,7 @@ function renderAbout() {
   currentRoute = "about";
   setPageMeta(
     `About | ${SITE}`,
-    "Since 2009 one room on Marlow Yard, East London, has shown one painter at a time. The gallery's history, year by year."
+    "Chris Williams Art Gallery has shown contemporary painting on Marlow Yard, Bethnal Green, since 2009. History of the gallery and its exhibitions."
   );
 }
 
@@ -207,8 +226,32 @@ function renderContacts() {
   currentRoute = "contacts";
   setPageMeta(
     `Contacts | ${SITE}`,
-    "14 Marlow Yard, London E2 7DG. Open Wednesday to Sunday, 11:00 to 19:00. Visits, sales and press: hello@chriswilliams.gallery."
+    "14 Marlow Yard, London E2 9AG. Open Wednesday to Saturday 11:00 to 18:00, Sunday 12:00 to 17:00. Admission free."
   );
+}
+
+// 404: a short note plus one painting from the collection, picked at random,
+// so a dead link still leads somewhere worth looking at.
+function renderNotFound() {
+  hideAllViews();
+  notFoundRoot.hidden = false;
+  const all = halls.flatMap((hall) => hall.works.map((work) => ({ hall, work })));
+  const { hall, work } = all[Math.floor(Math.random() * all.length)];
+  const link = notFoundRoot.querySelector("[data-notfound-work]");
+  link.href = url(`/work/${hall.id}/${work.id}`);
+  link.onclick = (event) => {
+    event.preventDefault();
+    navigate("work", { hallId: hall.id, workId: work.id });
+  };
+  const img = link.querySelector("img");
+  img.src = work.thumb;
+  img.alt = work.title;
+  link.querySelector(".notfound__frame").style.aspectRatio = work.aspect;
+  link.querySelector(".notfound__caption").textContent = `${work.title}, ${hall.artist.name}`;
+  enter(notFoundRoot, (el) => fadeIn(el, 0.6), () => revealText(notFoundRoot.querySelector(".notfound__title"), { delay: 0.1 }));
+  setActiveNav("notfound");
+  currentRoute = "notfound";
+  setPageMeta(`Page not found | ${SITE}`);
 }
 
 function renderWorkRoute({ hallId, workId }) {
@@ -268,6 +311,7 @@ onRoute("field", () => transition(renderField));
 onRoute("list", () => transition(renderList));
 onRoute("about", () => transition(renderAbout));
 onRoute("contacts", () => transition(renderContacts));
+onRoute("notfound", () => transition(renderNotFound));
 onRoute("work", (params) => transition(() => renderWorkRoute(params)));
 
 // A resize can cross the mobile breakpoint (e.g. rotating a tablet) , 

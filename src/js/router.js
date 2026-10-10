@@ -27,7 +27,9 @@ function parse(fullPath) {
   if (page === "/list") return { name: "list", params: {} };
   if (page === "/about") return { name: "about", params: {} };
   if (page === "/contacts") return { name: "contacts", params: {} };
-  return { name: "field", params: {} };
+  // The home page under any spelling ("/", "/index", a local test page).
+  if (page === "" || /^\/[\w-]*$/.test(page) && path.endsWith(".html")) return { name: "field", params: {} };
+  return { name: "notfound", params: {} };
 }
 
 function pathFor(name, params) {

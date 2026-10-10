@@ -1732,6 +1732,15 @@ button {
   text-wrap: balance;
 }
 
+.about-intro__lead {
+  max-width: 58ch;
+  margin-top: 28px;
+  font-size: 16px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  opacity: 0.7;
+}
+
 .about-intro__facts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2002,4 +2011,140 @@ button:focus-visible,
 
 .field-tile:focus-visible {
   outline-offset: 6px;
+}
+
+/* ---------- Solid chrome on a scrolled work page ----------
+   Same paper and grid as the page behind, pinned to the viewport, so the
+   bars read as part of the page rather than as panels laid on top. */
+.site-header,
+.site-footer {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.chrome-solid .site-header,
+body.chrome-solid .site-footer {
+  background-color: var(--color-bg);
+  background-image: linear-gradient(to right, rgba(40, 40, 40, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(40, 40, 40, 0.05) 1px, transparent 1px);
+  background-size: 190px 190px;
+  background-attachment: fixed;
+}
+
+body.chrome-solid .site-header {
+  box-shadow: 0 1px 0 rgba(40, 40, 40, 0.08);
+}
+
+body.chrome-solid .site-footer {
+  box-shadow: 0 -1px 0 rgba(40, 40, 40, 0.08);
+}
+
+/* ---------- 404 ---------- */
+
+.notfound {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  align-items: center;
+  gap: 24px;
+  padding: 120px 24px 100px;
+}
+
+.notfound__code {
+  font-size: 12px;
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.notfound__title {
+  margin-top: 14px;
+  font-size: clamp(44px, 6vw, 96px);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.notfound__lead {
+  max-width: 36ch;
+  margin-top: 20px;
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: 0.65;
+}
+
+.notfound__links {
+  display: flex;
+  gap: 20px;
+  margin-top: 32px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notfound__links a {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+  transition: opacity 0.2s ease;
+}
+
+.notfound__links a:hover {
+  opacity: 0.55;
+}
+
+.notfound__work {
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 100%;
+}
+
+.notfound__frame {
+  display: block;
+  height: min(56vh, 520px);
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--color-placeholder);
+}
+
+.notfound__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.notfound__work:hover .notfound__frame img {
+  transform: scale(1.03);
+}
+
+.notfound__caption {
+  font-size: 12px;
+  opacity: 0.55;
+}
+
+@media (max-width: 720px) {
+  .notfound {
+    grid-template-columns: 1fr;
+    align-content: center;
+    padding: 96px 16px 80px;
+  }
+
+  .notfound__frame {
+    height: 38vh;
+  }
+}
+
+/* ---------- No-WebGL fallback ----------
+   Without the ripple, pictures answer the pointer with a slow, slight zoom. */
+.no-webgl .field-tile__frame img,
+.no-webgl .list-tile img,
+.no-webgl .work-detail__more-frame img {
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.no-webgl .field-tile:hover .field-tile__frame img,
+.no-webgl .list-tile:hover img,
+.no-webgl .work-detail__more-item:hover .work-detail__more-frame img {
+  transform: scale(1.04);
 }

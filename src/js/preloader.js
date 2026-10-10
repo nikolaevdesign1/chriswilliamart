@@ -1,11 +1,10 @@
 import gsap from "gsap";
-import { halls } from "../data/halls.js";
 
 // The whole preloader is one number: real load progress, riding under the
 // pointer. At 100% it lets go and the page behind rises out of the distance.
 
 // Even a fully cached load counts up visibly rather than flashing 100%.
-const MIN_DURATION = 1400;
+const MIN_DURATION = 900;
 // How quickly the shown number chases the real one, per frame, so it glides
 // between jumps instead of stepping file by file.
 const COUNT_EASE = 0.08;
@@ -87,18 +86,25 @@ export function initPreloader() {
     onIntro(() => window.removeEventListener("pointermove", follow));
   }
 
-  // Thumbnails are what the field actually paints, so they are what "loaded"
-  // has to mean. Full-size files load later, on the work page.
-  const images = [...new Set(halls.flatMap((hall) => hall.works.map((work) => work.thumb)))];
+  // Only what the first screen shows: each view marks those images
+  // data-critical (the field's opening tiles, a work's hero, the first artist
+  // on a phone). Everything else loads after the intro, so the wait is a
+  // second or two even on a slow connection.
+  const images = [...document.querySelectorAll("main > :not([hidden]) img[data-critical]")];
   const total = images.length;
   let loaded = 0;
   let shown = 0;
   const startTime = performance.now();
 
-  images.forEach((src) => {
-    const img = new Image();
-    img.onload = img.onerror = () => (loaded += 1);
-    img.src = src;
+  const count = () => (loaded += 1);
+  images.forEach((img) => {
+    if (img.complete && img.naturalWidth) {
+      count();
+      return;
+    }
+    // A broken image still counts as done, so the intro can never stall.
+    img.addEventListener("load", count, { once: true });
+    img.addEventListener("error", count, { once: true });
   });
 
   const tick = () => {

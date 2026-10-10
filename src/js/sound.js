@@ -313,7 +313,18 @@ export function initSound() {
     if (!muted) startNow();
   });
 
-  startNow();
+  // The audio engine is started off the critical path: on the visitor's first
+  // gesture (which also lets it play straight away), or once the page has
+  // loaded and the browser is idle, whichever comes first.
+  const early = () => {
+    GESTURES.forEach((type) => window.removeEventListener(type, early, true));
+    startNow();
+    tryStart();
+  };
+  GESTURES.forEach((type) => window.addEventListener(type, early, true));
+  const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(early, { timeout: 2000 }) : setTimeout(early, 600));
+  if (document.readyState === "complete") idle();
+  else window.addEventListener("load", idle, { once: true });
 
   // Delegated rather than wired per control. The sound toggle is excluded , 
   // it has its own feedback: the meter starting or freezing.

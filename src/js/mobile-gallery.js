@@ -24,7 +24,7 @@ function artistsMarkup() {
           <h2 class="m-artist__name">${hall.artist.name}</h2>
           <p class="m-artist__meta">${artistLine(hall.artist)} · ${hall.artist.movement}</p>
           <button type="button" class="m-artist__cover" data-open-hall="${hall.id}" aria-label="Show works by ${hall.artist.name}">
-            <img src="${cover.thumb}" alt="" decoding="async" draggable="false"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'} />
+            <img src="${cover.thumb}" alt="" decoding="async" draggable="false"${i === 0 ? ' fetchpriority="high" data-critical' : ' loading="lazy"'} />
           </button>
           <div class="m-artist__foot">
             <p class="m-artist__bio">${hall.artist.bio}</p>

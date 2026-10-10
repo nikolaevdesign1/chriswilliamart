@@ -98,7 +98,8 @@ function build() {
       frame.dataset.rippleFrame = "";
 
       const img = document.createElement("img");
-      img.src = work.thumb;
+      // Not loaded yet: loadFieldImages() starts with the tiles on screen.
+      img.dataset.src = work.thumb;
       img.alt = work.title;
       img.decoding = "async";
       img.draggable = false;
@@ -303,6 +304,35 @@ export function initField(rootEl, handlers = {}) {
 export function pauseField() {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = null;
+}
+
+// Images load in two waves: the tiles on the opening screen right away (the
+// preloader waits for those, marked data-critical), everything else once the
+// browser is idle. Called when the field is first shown, so a phone, which
+// never shows the field, never downloads its pictures.
+let imagesStarted = false;
+
+export function loadFieldImages() {
+  if (imagesStarted) return;
+  imagesStarted = true;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const rest = [];
+  for (const item of items) {
+    const img = item.node.querySelector("img[data-src]");
+    if (!img) continue;
+    const near = item.sx > -w * 0.25 && item.sx < w * 1.25 && item.sy > -h * 0.25 && item.sy < h * 1.25;
+    if (near) {
+      img.dataset.critical = "";
+      img.fetchPriority = "high";
+      img.src = img.dataset.src;
+    } else rest.push(img);
+  }
+  const loadRest = () => rest.forEach((img) => (img.src = img.dataset.src));
+  const idle = () =>
+    "requestIdleCallback" in window ? requestIdleCallback(loadRest, { timeout: 2500 }) : setTimeout(loadRest, 800);
+  if (document.readyState === "complete") idle();
+  else window.addEventListener("load", idle, { once: true });
 }
 
 export function resumeField() {
