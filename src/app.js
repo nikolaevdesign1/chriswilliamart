@@ -40,7 +40,7 @@ let lensReady = false;
 function ensureLens() {
   if (lensReady) return;
   lensReady = true;
-  initLens(waterRoot);
+  initLens(waterRoot, fieldRoot);
 }
 // The work popup scrolls on the same inertia as everything else.
 smoothScroll(workRoot, { axis: "y" });

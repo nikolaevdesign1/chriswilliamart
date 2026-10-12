@@ -120,7 +120,12 @@ function buildFilter(id) {
   return { filter, image, displacements };
 }
 
-export function initLens(root) {
+// Only Chromium renders an SVG filter inside backdrop-filter. Safari and
+// Firefox accept the property and draw nothing, so there the same bend is
+// applied as an ordinary filter on the field itself.
+const backdropLens = () => Boolean(navigator.userAgentData);
+
+export function initLens(root, field) {
   if (!root) return;
 
   const svg = el("svg", { class: "lens-defs", "aria-hidden": "true", focusable: "false" });
@@ -128,28 +133,52 @@ export function initLens(root) {
   svg.appendChild(defs);
   document.body.appendChild(svg);
 
+  const layout = backdropLens() ? backdropBands(root, defs) : fieldFilter(field, defs);
+  if (!layout) return;
+
+  layout();
+  let timer;
+  window.addEventListener("resize", () => {
+    clearTimeout(timer);
+    timer = setTimeout(layout, 150);
+  });
+}
+
+// Each band's size: the lens itself, and the deeper strip it samples from.
+// The red channel reaches past the band's inner edge at the rim, so the
+// sampled strip is a little deeper than the lens.
+function bandSize(side, w, h) {
+  const band = Math.round((SIDES[side].vertical ? h : w) * BAND);
+  return { band, depth: Math.ceil(band * (1 + CHROMA)) + 4 };
+}
+
+// A map value of 1 means "shift by scale/2", and the map encodes a
+// full-band bend as 1, so the scale is twice the band.
+function setScales(displacements, band) {
+  displacements.forEach((d) => d.setAttribute("scale", (2 * band * Number(d.dataset.amount)).toFixed(2)));
+}
+
+// Chromium: four fixed strips over the edges, each bending what lies
+// behind it. Being on top, they bend the hover ripple canvas too.
+function backdropBands(root, defs) {
   const sides = Object.keys(SIDES).map((side) => {
     const strip = document.createElement("span");
     strip.className = `field-lens__band field-lens__band--${side}`;
     strip.style.backdropFilter = `url("#lens-${side}")`;
-    strip.style.webkitBackdropFilter = `url("#lens-${side}")`;
     root.appendChild(strip);
     const built = buildFilter(`lens-${side}`);
     defs.appendChild(built.filter);
     return { side, strip, ...built };
   });
 
-  function layout() {
+  return () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
 
     sides.forEach(({ side, strip, filter, image, displacements }) => {
       const { vertical } = SIDES[side];
-      const band = Math.round((vertical ? h : w) * BAND);
-      // The red channel reaches past the band's inner edge at the rim, and a
-      // backdrop can only be sampled inside its own element, so the element
-      // is a little deeper than the lens itself.
-      const depth = Math.ceil(band * (1 + CHROMA)) + 4;
+      const { band, depth } = bandSize(side, w, h);
+      // A backdrop can only be sampled inside its own element.
       const width = vertical ? w + OVERHANG * 2 : depth;
       const height = vertical ? depth : h + OVERHANG * 2;
 
@@ -164,16 +193,84 @@ export function initLens(root) {
       image.setAttribute("width", width);
       image.setAttribute("height", height);
       image.setAttribute("href", buildMap(side, band, depth));
-      // A map value of 1 means "shift by scale/2", and the map encodes a
-      // full-band bend as 1, so the scale is twice the band.
-      displacements.forEach((d) => d.setAttribute("scale", (2 * band * Number(d.dataset.amount)).toFixed(2)));
+      setScales(displacements, band);
     });
-  }
+  };
+}
 
-  layout();
-  let timer;
-  window.addEventListener("resize", () => {
-    clearTimeout(timer);
-    timer = setTimeout(layout, 150);
+// Safari and Firefox: one filter on the field, in which every primitive is
+// confined to its band's rectangle, so the middle of the screen is passed
+// through untouched and only the edges are worked on. Sides are drawn
+// left, right, then top and bottom over them, as the strips stack in
+// Chromium.
+function fieldFilter(field, defs) {
+  if (!field) return null;
+
+  const filter = el("filter", {
+    id: "lens-field",
+    x: "0",
+    y: "0",
+    filterUnits: "userSpaceOnUse",
+    primitiveUnits: "userSpaceOnUse",
+    "color-interpolation-filters": "sRGB",
   });
+  const merge = el("feMerge");
+  merge.appendChild(el("feMergeNode", { in: "SourceGraphic" }));
+
+  const sides = Object.keys(SIDES).map((side) => {
+    const image = el("feImage", { preserveAspectRatio: "none", result: `map-${side}` });
+    filter.appendChild(image);
+    const channels = [
+      ["r", "1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0", 1 + CHROMA],
+      ["g", "0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0", 1],
+      ["b", "0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0", 1 - CHROMA],
+    ];
+    const primitives = [image];
+    const displacements = channels.map(([name, matrix, amount]) => {
+      const m = el("feColorMatrix", { in: "SourceGraphic", type: "matrix", values: matrix, result: `${side}-c-${name}` });
+      const d = el("feDisplacementMap", {
+        in: `${side}-c-${name}`,
+        in2: `map-${side}`,
+        xChannelSelector: "R",
+        yChannelSelector: "G",
+        result: `${side}-d-${name}`,
+      });
+      d.dataset.amount = amount;
+      filter.append(m, d);
+      primitives.push(m, d);
+      return d;
+    });
+    const rg = el("feBlend", { in: `${side}-d-r`, in2: `${side}-d-g`, mode: "screen", result: `${side}-rg` });
+    const rgb = el("feBlend", { in: `${side}-rg`, in2: `${side}-d-b`, mode: "screen", result: `${side}-out` });
+    filter.append(rg, rgb);
+    primitives.push(rg, rgb);
+    merge.appendChild(el("feMergeNode", { in: `${side}-out` }));
+    return { side, image, primitives, displacements };
+  });
+
+  filter.appendChild(merge);
+  defs.appendChild(filter);
+  field.style.filter = 'url("#lens-field")';
+
+  return () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    filter.setAttribute("width", w);
+    filter.setAttribute("height", h);
+
+    sides.forEach(({ side, image, primitives, displacements }) => {
+      const { vertical, outerAtStart } = SIDES[side];
+      const { band, depth } = bandSize(side, w, h);
+      // The band's rectangle, held 2px short of the screen corners along its
+      // length: the "no shift" map value is a hair off centre, and at the
+      // very ends that hair sampled past the field, the thin coloured curl
+      // the strips avoid by overhanging. The crossing band covers the gap.
+      const rect = vertical
+        ? { x: 2, y: outerAtStart ? 0 : h - depth, width: w - 4, height: depth }
+        : { x: outerAtStart ? 0 : w - depth, y: 2, width: depth, height: h - 4 };
+      primitives.forEach((p) => Object.entries(rect).forEach(([k, v]) => p.setAttribute(k, v)));
+      image.setAttribute("href", buildMap(side, band, depth));
+      setScales(displacements, band);
+    });
+  };
 }
