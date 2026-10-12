@@ -71,9 +71,13 @@ const DEFAULT_TITLE = document.title;
 const metaDescription = document.querySelector('meta[name="description"]');
 const DEFAULT_DESCRIPTION = metaDescription?.content ?? "";
 
+const canonical = document.querySelector('link[rel="canonical"]');
+
 function setPageMeta(title, description = DEFAULT_DESCRIPTION) {
   document.title = title;
   metaDescription?.setAttribute("content", description);
+  // Keep the canonical address in step with the route the visitor is on.
+  if (canonical) canonical.href = location.origin + location.pathname.replace(/\/?$/, "/");
 }
 
 let listInitialized = false;

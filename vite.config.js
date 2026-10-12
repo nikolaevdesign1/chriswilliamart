@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
@@ -30,7 +30,10 @@ function workRoutes() {
 // BASE_PATH is the sub-path the site is served from ("/repo/" on GitHub
 // Pages), SITE_URL its full address, used where a URL must be absolute.
 const BASE_PATH = process.env.BASE_PATH || "/";
-const SITE_URL = process.env.SITE_URL || "";
+// On Vercel the production domain comes for free as a system variable.
+const SITE_URL =
+  process.env.SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/` : "");
 
 // Social previews need absolute image URLs.
 function absoluteMeta() {
@@ -42,7 +45,10 @@ function absoluteMeta() {
       order: "post",
       handler(html) {
         if (!SITE_URL) return html;
-        return html.replace(/content="[^"]*\/og-image\.jpg"/g, `content="${SITE_URL}og-image.jpg"`);
+        const canonical = `    <link rel="canonical" href="${SITE_URL}" />\n    <meta property="og:url" content="${SITE_URL}" />\n`;
+        return html
+          .replace(/content="[^"]*\/og-image\.jpg"/g, `content="${SITE_URL}og-image.jpg"`)
+          .replace("</head>", `${canonical}  </head>`);
       },
     },
   };
@@ -61,9 +67,14 @@ function routeFolders() {
     writeBundle() {
       const page = resolve(outDir, "index.html");
       if (!existsSync(page)) return;
+      const html = readFileSync(page, "utf8");
       ROUTES.forEach((route) => {
         mkdirSync(resolve(outDir, route), { recursive: true });
-        copyFileSync(page, resolve(outDir, route, "index.html"));
+        // Each copy names its own address as canonical, not the home page's.
+        const own = SITE_URL
+          ? html.replaceAll(`href="${SITE_URL}"`, `href="${SITE_URL}${route}/"`).replaceAll(`og:url" content="${SITE_URL}"`, `og:url" content="${SITE_URL}${route}/"`)
+          : html;
+        writeFileSync(resolve(outDir, route, "index.html"), own);
       });
       // Any other address (a work page opened directly) falls through to the
       // host's 404 page; making that the app lets the router take over.
