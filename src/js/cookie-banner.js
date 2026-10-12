@@ -44,10 +44,13 @@ export function initCookieBanner({ delay = 1 } = {}) {
   `;
   document.body.appendChild(banner);
 
+  // Slides up from below the screen edge rather than fading in: a half
+  // transparent button reads as low contrast to anyone (or any audit)
+  // looking at it mid-entry.
   gsap.fromTo(
     banner,
-    { y: 24, opacity: 0 },
-    { y: 0, opacity: 1, duration: 0.9, delay, ease: "back.out(1.4)" }
+    { yPercent: 100, y: 120 },
+    { yPercent: 0, y: 0, duration: 0.9, delay, ease: "back.out(1.4)" }
   );
 
   banner.addEventListener("click", (event) => {
