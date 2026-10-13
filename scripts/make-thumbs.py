@@ -2,7 +2,8 @@
 
 - Full-size paintings (work page): longest side 1600 px, WebP.
 - Thumbnails (field, list, mobile, ripple): longest side 960 px, WebP.
-- Room photos (work page mockups): WebP at their original size.
+- Room photos (work page mockups): WebP at 2400 px wide for large and
+  high-density screens, and a 1200 px copy for phones.
 
 The JPEGs in src/assets/img/art and src/assets/img/rooms stay as masters and
 are never bundled. Run after adding or replacing an image:
@@ -29,5 +30,6 @@ for src in sorted((ROOT / "img" / "art").glob("*.jpg")):
     total += save(src, src.with_suffix(".webp"), 1600, 70)
     total += save(src, ROOT / "thumbs" / "art" / f"{src.stem}.webp", 960, 55)
 for src in sorted((ROOT / "img" / "rooms").glob("*.jpg")):
-    total += save(src, src.with_suffix(".webp"), None, 84)
+    total += save(src, src.with_suffix(".webp"), 2400, 80)
+    total += save(src, src.with_name(f"{src.stem}-1200.webp"), 1200, 80)
 print(f"wrote {total / 1024 / 1024:.1f} MB of WebP")

@@ -1137,7 +1137,16 @@ button {
   margin: 0 auto;
   overflow: hidden;
   container-type: size;
-  background: var(--photo) center / cover no-repeat;
+}
+
+/* An <img> rather than a CSS background, so it loads lazily and the browser
+   picks the 1200 or 2400 px file for the screen. */
+.room__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .room__art {

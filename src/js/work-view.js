@@ -13,9 +13,11 @@ import { showRipple, moveRipple, hideRipple } from "./ripple.js";
 // scale: how many image pixels make a centimetre on the wall, where the
 // floor meets the wall, where the wall's centre is, and how tall the
 // furniture under the picture stands. Coordinates are in the photo's own
-// pixels.
+// pixels at 960 px wide; every value is used as a share of the photo, so the
+// measurements hold for the 2400 px files the page actually loads.
 const roomPhotos = import.meta.glob("../assets/img/rooms/*.webp", { eager: true, import: "default" });
 const roomPhoto = (name) => roomPhotos[`../assets/img/rooms/${name}.webp`];
+const roomPhotoSmall = (name) => roomPhotos[`../assets/img/rooms/${name}-1200.webp`];
 
 const ROOMS = [
   {
@@ -66,7 +68,6 @@ function roomMarkup(room, work, heightCm) {
   // Everything as a share of the photo, so the composite scales with it.
   const centerY = room.floorY - center * room.pxPerCm;
   const style = [
-    `--photo:url("${roomPhoto(room.id)}")`,
     `--ratio:${room.width / room.height}`,
     `--cx:${((room.centerX / room.width) * 100).toFixed(3)}%`,
     `--cy:${((centerY / room.height) * 100).toFixed(3)}%`,
@@ -78,6 +79,15 @@ function roomMarkup(room, work, heightCm) {
   return `
     <figure class="room room--${room.id}" style='${style}'>
       <div class="room__stage">
+        <img
+          class="room__photo"
+          src="${roomPhoto(room.id)}"
+          srcset="${roomPhotoSmall(room.id)} 1200w, ${roomPhoto(room.id)} 2400w"
+          sizes="(min-width: 1180px) 1180px, 100vw"
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
         <div class="room__art room__art--${room.frame}">
           <img src="${work.image}" alt="${work.title} shown in a ${room.name.toLowerCase()}" loading="lazy" />
         </div>
