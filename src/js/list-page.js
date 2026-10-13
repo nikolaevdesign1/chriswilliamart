@@ -54,7 +54,11 @@ function showPreview(work, event) {
   preview.style.setProperty("--aspect", work.aspect);
   previewMoveX(event.clientX);
   previewMoveY(event.clientY - 24);
-  gsap.to(preview, { opacity: 1, duration: 0.25, ease: "power2.out" });
+  // overwrite: a fade-in still running when the pointer leaves outlived the
+  // shorter fade-out and set the preview back to full opacity, leaving it
+  // stuck over the page. Each fade now cancels the other (opacity only, the
+  // follow tweens on x/y keep running).
+  gsap.to(preview, { opacity: 1, duration: 0.25, ease: "power2.out", overwrite: "auto" });
 }
 
 function movePreview(event) {
@@ -65,7 +69,7 @@ function movePreview(event) {
 
 function hidePreview() {
   if (!preview) return;
-  gsap.to(preview, { opacity: 0, duration: 0.2, ease: "power2.out" });
+  gsap.to(preview, { opacity: 0, duration: 0.2, ease: "power2.out", overwrite: "auto" });
 }
 
 // Instant, non-animated hide, used when the list is being torn down
