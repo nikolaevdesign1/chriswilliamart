@@ -213,6 +213,10 @@ function onPointerDown(event) {
   if (event.pointerType !== "touch") event.preventDefault();
   dragging = true;
   didDrag = false;
+  // A drag released over empty field ends with its click on `root` (pointer
+  // capture), never on a tile, so the flag it raised would otherwise swallow
+  // the next real click on a work. Every new press starts clean.
+  suppressClick = false;
   last = { x: event.clientX, y: event.clientY };
   startPos = { x: event.clientX, y: event.clientY };
   velocity = { x: 0, y: 0 };
