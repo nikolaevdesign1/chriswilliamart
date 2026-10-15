@@ -25,3 +25,4 @@ dist-ssr
 
 # Local editor/agent config
 .claude/
+exports/
